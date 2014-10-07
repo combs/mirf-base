@@ -1,92 +1,48 @@
 #!/usr/bin/php
 <?php
-/**
- * OpenWeatherMap-PHP-API — A php api to parse weather data from http://www.OpenWeatherMap.org .
- *
- * @license MIT
- *
- * Please see the LICENSE file distributed with this source code for further
- * information regarding copyright and licensing.
- *
- * Please visit the following links to read about the usage policies and the license of
- * OpenWeatherMap before using this class:
- *
- * @see http://www.OpenWeatherMap.org
- * @see http://www.OpenWeatherMap.org/about
- * @see http://www.OpenWeatherMap.org/copyright
- * @see http://openweathermap.org/appid
- */
+	date_default_timezone_set('America/New_York');
 
-use Cmfcmf\OpenWeatherMap;
-
-if (file_exists(realpath(dirname(__FILE__)) . '/vendor/autoload.php')) {
-    // Library is not part of a project. "composer install" was executed directly on this library's composer file.
-    require(realpath(dirname(__FILE__)) . '/vendor/autoload.php');
-} else {
-    // Library is part of a project.
-    /** @noinspection PhpIncludeInspection */
-    require('../../../autoload.php');
-}
-
-// Language of data (try your own language here!):
-$lang = 'en';
-
-// Units (can be 'metric' or 'imperial' [default]):
-$units = 'imperial';
-
-// Get OpenWeatherMap object. Don't use caching (take a look into Example_Cache.php to see how it works).
-$owm = new OpenWeatherMap();
-
-// Example 1: Get forecast for the next 10 days for 4140963.
-
-$forecast = $owm->getWeatherForecast('4140963', $units, $lang, '', 1);
-
-$weather = $owm->getWeather('4140963', $units, $lang);
+$json_string_conditions = file_get_contents("http://api.wunderground.com/api/90eba8f2b040b290/geolookup/conditions/q/DC/Washington.json");
+  $parsed_json_conditions = json_decode($json_string_conditions);
+  $location = $parsed_json_conditions->{'location'}->{'city'};
+  $temp_f = $parsed_json_conditions->{'current_observation'}->{'temp_f'};
+  
+  
+$json_string_forecast = file_get_contents("http://api.wunderground.com/api/90eba8f2b040b290/geolookup/forecast/q/DC/Washington.json");
+  $parsed_json_forecast = json_decode($json_string_forecast);
+  
+$this_forecast = $parsed_json_forecast->{'forecast'}->{'simpleforecast'}->{'forecastday'}[0];
 
 
-$min=round($weather->temperature->getValue());
-$max=round($weather->temperature->getValue());
-$precip=intval($weather->precipitation->getValue());
-$preciptext=$weather->precipitation->getDescription();
-$cloud=intval($weather->clouds->getValue());
-$cloudtext=$weather->clouds->getDescription();
+$temp_low = $this_forecast->{'low'}->{'fahrenheit'};
+$temp_high = $this_forecast->{'high'}->{'fahrenheit'};
+$humidity = $this_forecast->{'avehumidity'};
+$rain_inches = $this_forecast->{'qpf_allday'}->{'in'};
+$precip_chance = $this_forecast->{'pop'};
+$snow_inches = $this_forecast->{'snow_allday'}->{'in'};
+$conditions = $this_forecast->{'conditions'};
 
+echo $temp_low;
+echo "WCLKKBASES0" . round($temp_f) . chr(223) . " now; " . $temp_low . "-" . $temp_high . "\n";
 
-foreach ($forecast as $thisweather) {
-	if (round($thisweather->temperature->getValue())<$min) {
-	$min = round($thisweather->temperature->getValue());
-} 
-if (round($thisweather->temperature->getValue())>$max) {
-$max = round($thisweather->temperature->getValue());
-}    
-	if ( (intval($thisweather->precipitation->getValue() ) > $precip)) {
-
-		$precip=(intval($thisweather->precipitation->getValue() ));
-		$preciptext=$thisweather->precipitation->getDescription();
-	}
-	if ( (intval($thisweather->clouds->getValue() ) > $cloud)) {
-
-		$cloud=(intval($thisweather->clouds->getValue() ));
-		$cloudtext=$thisweather->clouds->getDescription();
-	}
-	
-}
-
-
-echo "WCLKKBASES0" . round($weather->temperature->getValue()) . chr(223) . " now; " . $min . "-" . $max . "\n";
 usleep(50000);
 
 
-if ($precip > 0) {
+if ($snow_inches > 0 ) {
+echo "WCLKKBASES1" . $snow_inches . "in SNOW! (" . $precip_chance . "%)" . "\n";
+	
+	
+} else if ($rain_inches > 0 ) {
+	
+echo "WCLKKBASES1" . $rain_inches . "in rain (" . $precip_chance . "%)" . "\n";
 
-echo "WCLKKBASES1" . ucfirst($preciptext) . " (" . $precip . ")\n";
+} else if ($humidity > 60)  {
 
+echo "WCLKKBASES1" . $humidity . "% humidity" . "\n";
 } else {
-
-echo "WCLKKBASES1" . ucfirst($cloudtext) . "\n";
+	
+echo "WCLKKBASES1" . $conditions . "\n";
 
 }
-
-# . $weather->description . "\n";
 
 
