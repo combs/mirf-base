@@ -22,22 +22,22 @@ $precip_chance = $this_forecast->{'pop'};
 $snow_inches = $this_forecast->{'snow_allday'}->{'in'};
 $conditions = $this_forecast->{'conditions'};
 
-echo "WCLKKBASES0" . round($temp_f) . chr(223) . " now; " . $temp_low . "-" . $temp_high . "\n";
+echo "WCLKKBASES0" . round($temp_f) . chr(223) . " now. " . $temp_low . "-" . $temp_high . chr(223) . "\n";
 
 usleep(50000);
 
 
 if ($snow_inches > 0 ) {
-echo "WCLKKBASES1" . $snow_inches . "in SNOW! (" . $precip_chance . "%)" . "\n";
+echo "WCLKKBASES1" . round($snow_inches,1) . '" SNOW! (' . $precip_chance . "%)" . "\n";
 	
 	
 } else if ($rain_inches > 0 ) {
 	
-echo "WCLKKBASES1" . $rain_inches . "in rain (" . $precip_chance . "%)" . "\n";
+echo "WCLKKBASES1" . round($rain_inches,1) . '" rain (' . $precip_chance . "%)" . "\n";
 
 } else if ($humidity > 60)  {
 
-echo "WCLKKBASES1" . $humidity . "% humidity" . "\n";
+echo "WCLKKBASES1" . round($humidity) . "% humidity" . "\n";
 } else {
 	
 echo "WCLKKBASES1" . ucfirst(strtolower(trim($conditions))) . "\n";
