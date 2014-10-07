@@ -25,7 +25,7 @@ $conditions = $this_forecast->{'conditions'};
 echo $temp_low;
 echo "WCLKKBASES0" . round($temp_f) . chr(223) . " now; " . $temp_low . "-" . $temp_high . "\n";
 
-usleep(50000);
+usleep(150000);
 
 
 if ($snow_inches > 0 ) {
