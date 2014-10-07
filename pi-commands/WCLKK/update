@@ -40,7 +40,7 @@ echo "WCLKKBASES1" . $rain_inches . "in rain (" . $precip_chance . "%)" . "\n";
 echo "WCLKKBASES1" . $humidity . "% humidity" . "\n";
 } else {
 	
-echo "WCLKKBASES1" . $conditions . "\n";
+echo "WCLKKBASES1" . ucfirst(strtolower(trim($conditions))) . "\n";
 
 }
 
