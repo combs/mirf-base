@@ -22,10 +22,9 @@ $precip_chance = $this_forecast->{'pop'};
 $snow_inches = $this_forecast->{'snow_allday'}->{'in'};
 $conditions = $this_forecast->{'conditions'};
 
-echo $temp_low;
 echo "WCLKKBASES0" . round($temp_f) . chr(223) . " now; " . $temp_low . "-" . $temp_high . "\n";
 
-usleep(150000);
+usleep(50000);
 
 
 if ($snow_inches > 0 ) {
