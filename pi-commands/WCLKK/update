@@ -44,26 +44,49 @@ $precip_chance = $this_forecast->{'pop'};
 $snow_inches = $this_forecast->{'snow_allday'}->{'in'};
 $conditions = $this_forecast->{'conditions'};
 
-echo "WCLKKBASES0" . round($temp_f) . chr(223) . " now. " . $temp_low . "-" . $temp_high . chr(223) . "\n";
+
+$outputConditions = "WCLKKBASESC";
+$outputNow = "WCLKKBASESN";
+$outputLater = "WCLKKBASESL";
+$output1 = "WCLKKBASES0";
+$output2 = "WCLKKBASES1";
+
+$output1 .=  round($temp_f) . chr(223) . " now. " . $temp_low . "-" . $temp_high . chr(223) . "\n";
+
+echo $output1;
+
+$outputNow .=   round($temp_f) . chr(223) . " now. " . "\n";
+$outputLater .=  $temp_low . "-" . $temp_high . chr(223) . "\n";
 
 usleep(50000);
+echo $outputNow;
+usleep(50000);
+echo $outputLater;
+
 
 
 if ($snow_inches > 0 ) {
-echo "WCLKKBASES1" . round($snow_inches,1) . '" SNOW! (' . $precip_chance . "%)" . "\n";
+$outputConditions .= round($snow_inches,1) . '" SNOW! (' . $precip_chance . "%)" . "\n";
 	
 	
 } else if ($rain_inches > 0 ) {
 	
-echo "WCLKKBASES1" . round($rain_inches,1) . '" rain (' . $precip_chance . "%)" . "\n";
+$outputConditions .= round($rain_inches,1) . '" rain (' . $precip_chance . "%)" . "\n";
 
 } else if ($humidity > 60)  {
 
-echo "WCLKKBASES1" . round($humidity) . "% humidity" . "\n";
+$outputConditions .=  round($humidity) . "% humidity" . "\n";
 } else {
 	
-echo "WCLKKBASES1" . ucfirst(strtolower(trim($conditions))) . "\n";
+$outputConditions .=  "WCLKKBASES1" . ucfirst(strtolower(trim($conditions))) . "\n";
 
 }
+$output2 = $outputConditions;
+$output2=substr_replace($output2,'1',10,1);
+
+usleep(50000);
+echo $outputConditions;
+usleep(50000);
+echo $output2;
 
 
