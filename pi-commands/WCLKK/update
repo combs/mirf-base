@@ -53,12 +53,12 @@ $output2 = "WCLKKBASES1";
 
 $output1 .=  round($temp_f) . chr(223) . " now. " . $temp_low . "-" . $temp_high . chr(223) . "\n";
 
-echo $output1;
+// echo $output1;
+// usleep(50000);
 
 $outputNow .=   round($temp_f) . chr(223) . " now. " . "\n";
 $outputLater .=  $temp_low . "-" . $temp_high . chr(223) . "\n";
 
-usleep(50000);
 echo $outputNow;
 usleep(50000);
 echo $outputLater;
@@ -86,7 +86,7 @@ $output2=substr_replace($output2,'1',10,1);
 
 usleep(50000);
 echo $outputConditions;
-usleep(50000);
-echo $output2;
+// usleep(50000);
+// echo $output2;
 
 
