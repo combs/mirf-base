@@ -1,16 +1,38 @@
 #!/usr/bin/php
 <?php
 	date_default_timezone_set('America/New_York');
+	ini_set('default_socket_timeout', 15);
 
-$json_string_conditions = file_get_contents("http://api.wunderground.com/api/90eba8f2b040b290/geolookup/conditions/q/DC/Washington.json");
+$parsed_json_conditions=null;
+$parsed_json_forecast=null;
+$errors=0;
+
+while (!$parsed_string_conditions && $errors<5) {
+
+	$json_string_conditions = file_get_contents("http://api.wunderground.com/api/90eba8f2b040b290/geolookup/conditions/q/DC/Washington.json");
   $parsed_json_conditions = json_decode($json_string_conditions);
+	if (!$parsed_json_conditions) {
+$errors++;
+sleep(2);
+}
+
+}
+
+
   $location = $parsed_json_conditions->{'location'}->{'city'};
   $temp_f = $parsed_json_conditions->{'current_observation'}->{'temp_f'};
   
   
+while (!$parsed_string_forecast && $errors<5) {
 $json_string_forecast = file_get_contents("http://api.wunderground.com/api/90eba8f2b040b290/geolookup/forecast/q/DC/Washington.json");
   $parsed_json_forecast = json_decode($json_string_forecast);
-  
+	if (!$parsed_json_forecast) {
+$errors++;
+sleep(2);
+}
+
+  }
+
 $this_forecast = $parsed_json_forecast->{'forecast'}->{'simpleforecast'}->{'forecastday'}[0];
 
 
