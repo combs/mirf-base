@@ -13,7 +13,7 @@ byte iterator=0;
 
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(500000);
   inputString.reserve(200);
 
   Mirf.spi = &MirfHardwareSpi;
