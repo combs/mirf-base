@@ -78,7 +78,7 @@ $outputConditions .= round($rain_inches,1) . '" rain (' . $precip_chance . "%)" 
 $outputConditions .=  round($humidity) . "% humidity" . "\n";
 } else {
 	
-$outputConditions .=  "WCLKKBASES1" . ucfirst(strtolower(trim($conditions))) . "\n";
+$outputConditions .=  ucfirst(strtolower(trim($conditions))) . "\n";
 
 }
 $output2 = $outputConditions;
