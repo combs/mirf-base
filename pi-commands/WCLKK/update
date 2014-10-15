@@ -17,7 +17,7 @@ while (!$parsed_json && $errors<2) {
 }
 
 
-$location = $parsed_json->{'location'}->{'city'};
+// $location = $parsed_json->{'location'}->{'city'};
 $temp_f = $parsed_json->{'current_observation'}->{'temp_f'};
   
 $this_forecast = $parsed_json->{'forecast'}->{'simpleforecast'}->{'forecastday'}[0];
