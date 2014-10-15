@@ -69,7 +69,11 @@ if ($snow_inches > 0 ) {
 	$outputConditions .=  round($humidity) . "% humidity" . "\n";
 } else {
 	
+<<<<<<< HEAD
 	$outputConditions .=  "WCLKKBASES1" . ucfirst(strtolower(trim($conditions))) . "\n";
+=======
+$outputConditions .=  ucfirst(strtolower(trim($conditions))) . "\n";
+>>>>>>> 74e3bdb37123c2f26ec893a86dada2e7ffb5ad00
 
 }
 $output2 = $outputConditions;
