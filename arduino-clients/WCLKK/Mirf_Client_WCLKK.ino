@@ -52,10 +52,12 @@ void setup()
   // name the receiving channel - must match tranmitter setting!
   Mirf.setRADDR((byte *)"WCLKK");
 
-  // just a single byte is transmitted
-  //  Mirf.payload = 1;
+
   Mirf.payload=Payload;
-  Mirf.channel = 70;
+
+  Mirf.channel = 10;
+  
+
   // configure 15 retries, 500us between attempts
   Mirf.configRegister(SETUP_RETR,(B0001<<ARD ) | (B1111<<ARC));
 

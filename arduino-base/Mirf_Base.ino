@@ -22,13 +22,9 @@ void setup()
   // name the receiving channel - must match tranmitter setting!
   Mirf.setRADDR((byte *)"BASES");
 
-  // just a single byte is transmitted
-  //  Mirf.payload = 1;
-  Mirf.payload=32;
-  // we use channel 90 as it is outside of WLAN bands 
-  // or channels used by wireless surveillance cameras 
-  //  
-  Mirf.channel = 70;
+  Mirf.payload=32; 
+  
+  Mirf.channel = 10;
   // configure 15 retries, 500us between attempts
   Mirf.configRegister(SETUP_RETR,(B0001<<ARD ) | (B1111<<ARC));
 
