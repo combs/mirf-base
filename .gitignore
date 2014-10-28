@@ -35,3 +35,9 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+
+# API keys
+
+.wunderground-api-key
+

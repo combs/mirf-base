@@ -2,13 +2,39 @@
 <?php
 date_default_timezone_set('America/New_York');
 ini_set('default_socket_timeout', 15);
-
 $parsed_json=null;
 $errors=0;
+$max_age=60*30;
+$cache_file="/tmp/cache-mirf-WCLKK";
+
+if (file_exists($cache_file)) {
+if (time() - filemtime($cache_file) < $max_age) {
+$lines=file($cache_file);
+foreach ($lines as $line_num => $line) {
+echo $line;
+usleep(50000);
+}
+exit;
+
+}
+else {
+// echo "cache too old";
+}
+
+} else {
+// echo "cache doesn't exist";
+ }
+
+
+
+$api_key=rtrim(file_get_contents(".wunderground-api-key"));
+if (!api_key) {
+ exit("\nPlease put your Weather Underground API key in ~/.wunderground-api-key\n");
+}
 
 while (!$parsed_json && $errors<2) {
 
-	$json_string_conditions = file_get_contents("http://api.wunderground.com/api/90eba8f2b040b290/conditions/forecast/q/DC/Washington.json");
+	$json_string_conditions = file_get_contents("http://api.wunderground.com/api/" . $api_key . "/conditions/forecast/q/DC/Washington.json");
 	$parsed_json = json_decode($json_string_conditions);
 	if (!$parsed_json) {
 		$errors++;
@@ -47,8 +73,10 @@ $outputNow .=   round($temp_f) . chr(223) . " now. " . "\n";
 $outputLater .=  $temp_low . "-" . $temp_high . chr(223) . "\n";
 
 echo $outputNow;
+file_put_contents($cache_file,$outputNow);
 usleep(50000);
 echo $outputLater;
+file_put_contents($cache_file, $outputLater, FILE_APPEND | LOCK_EX);
 
 
 
@@ -77,6 +105,7 @@ $output2=substr_replace($output2,'1',10,1);
 
 usleep(50000);
 echo $outputConditions;
+file_put_contents($cache_file, $outputConditions, FILE_APPEND | LOCK_EX);
 // usleep(50000);
 // echo $output2;
 
