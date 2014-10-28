@@ -29,12 +29,18 @@ void setup()
   // or channels used by wireless surveillance cameras 
   //  
   Mirf.channel = 70;
+  // configure 15 retries, 500us between attempts
+  Mirf.configRegister(SETUP_RETR,(B0001<<ARD ) | (B1111<<ARC));
+
+
 
   // now config the device.... 
   Mirf.config();  
 
   // Set 1MHz data rate - this increases the range slightly
   Mirf.configRegister(RF_SETUP,0x06);
+  
+//  Mirf.configRegister(RF_SETUP, (B0000<<RF_DR_HIGH) | (B
 
   Mirf.setTADDR((byte *)"WCLKK");
 

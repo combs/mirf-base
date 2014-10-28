@@ -56,6 +56,8 @@ void setup()
   //  Mirf.payload = 1;
   Mirf.payload=Payload;
   Mirf.channel = 70;
+  // configure 15 retries, 500us between attempts
+  Mirf.configRegister(SETUP_RETR,(B0001<<ARD ) | (B1111<<ARC));
 
   // now config the device.... 
   Mirf.config();  
@@ -217,7 +219,13 @@ void loop()
       x=16-strlen(stringForecastLater);
       y=0;
       break;
-
+    case 'A':
+      x=30;
+      y=4;
+      length=0;
+      theMessage[0]='\0';
+      msRequestedForecast=millis();
+      
     }
 
     lcd.setCursor(x,y);
