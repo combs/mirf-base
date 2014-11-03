@@ -2,9 +2,25 @@
 #include <Mirf.h>
 #include <Wire.h>
 
+
 // #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
-#include "LiquidCrystal_I2C.h"
+
+//#define LCD_I2C
+//#include "LiquidCrystal_I2C.h"
+
+#define LCD_BACKLIGHT_PIN 10
+
+#include "LiquidCrystal.h"
+
+#ifdef LCD_I2C
+
+// #include "LiquidCrystal_I2C.h"
+#else
+ // #include "LiquidCrystal.h"
+
+#endif
+
 
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
@@ -28,8 +44,13 @@ char stringForecastLater[Payload];
 char stringForecastConditions[Payload];
 char stringBuffer[Payload];
 
+#ifdef LCD_I2C
 
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+#else
+LiquidCrystal lcd(7, 6, A3, A2, A1, A0);
+
+#endif
 //LiquidCrystal_I2C_simple lcd(0x27,16,2); 
 
 
@@ -41,7 +62,9 @@ void setup()
   //  Serial.begin(115200);
   inputString.reserve(200);
   lcd.begin(16, 2);
-  lcd.on();
+  #ifdef LCD_I2C
+    lcd.on();
+  #endif
 
   delay(2);
   lcd.clear();
@@ -123,7 +146,9 @@ void loop()
 {
 
   if (paintRequested==true) {
+    #ifdef LCD_I2C
     lcd.on();
+    #endif
     paintScreen();
     paintRequested=false;  
   }
@@ -255,11 +280,17 @@ void loop()
 
   delay(250);
   if (millis() - msTurnedOn > msOnTime ) {
+    #ifdef LCD_I2C
     lcd.off();
+#endif
 
   } 
   else {
+        #ifdef LCD_I2C
+
     lcd.on();
+    #endif
+    
     //    paintScreen();
 
   }
