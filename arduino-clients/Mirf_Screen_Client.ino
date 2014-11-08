@@ -170,14 +170,8 @@ void loop()
 
     updateRequested=false;
     if ( ( millis() - msGotForecast > msMaxDataAge ) || msGotForecast==0) {
-
-      lcd.setCursor(strlen(stringForecastNow),0);
-      lcd.blink();
-      msRequestedForecast=millis();
-//      inputString="BASESWCLKKupdate";
-//      SendMessage(inputString);
-      SendToBase("update");
-      blockForSend();
+      requestUpdate();
+      
 
     } 
     else {
@@ -281,12 +275,22 @@ void loop()
 
   delay(250);
   if (millis() - msTurnedOn > msOnTime ) {
+    #ifdef LCD_CLEAR_ON_SLEEP
+    myLCDClear();
+    
+    #endif
+    
     noBacklight();
     noDisplay();
 
   } 
   else {
-
+    if ( ( millis() - msGotForecast > msMaxDataAge ) ) {
+      requestUpdate();
+      // screen is on, data is old, but let's not flagUpdate because that will keep screen on longer
+      
+    }
+    
     display();
     backlight();
 
@@ -295,6 +299,18 @@ void loop()
   }
 
 
+
+}
+
+void requestUpdate() {
+  
+        lcd.setCursor(strlen(stringForecastNow),0);
+      lcd.blink();
+      msRequestedForecast=millis();
+//      inputString="BASESWCLKKupdate";
+//      SendMessage(inputString);
+      SendToBase("update");
+      blockForSend();
 
 }
 
