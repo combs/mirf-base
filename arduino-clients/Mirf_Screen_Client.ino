@@ -285,7 +285,7 @@ void loop()
 
   } 
   else {
-    if ( ( millis() - msGotForecast > msMaxDataAge ) ) {
+    if ( ( millis() - msGotForecast > msMaxDataAge ) && ( millis() - msRequestedForecast ) > msTimeout ) {
       requestUpdate();
       // screen is on, data is old, but let's not flagUpdate because that will keep screen on longer
       
