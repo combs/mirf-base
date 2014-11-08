@@ -1,36 +1,35 @@
 #include <SPI.h>
 #include <Mirf.h>
 #include <Wire.h>
-
-
-// #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-//#define LCD_I2C
-//#include "LiquidCrystal_I2C.h"
+
+void setup();
+
+#include <LiquidCrystal_I2C.h>
+
+//#include <LiquidCrystal.h>
+
+#include "mirfscreenconfig.h"
+
+#define LCD_I2C
+// #define LCD_PCB
 
 #define LCD_BACKLIGHT_PIN 10
 
-#include "LiquidCrystal.h"
-
-#ifdef LCD_I2C
-
-// #include "LiquidCrystal_I2C.h"
-#else
- // #include "LiquidCrystal.h"
-
-#endif
+#define MIRF_PINS_STANDARD
+// #define MIRF_PINS_PCB
 
 
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
-volatile byte updateRequested = false;
-volatile byte paintRequested = false;
+volatile byte updateRequested = true;
+volatile byte paintRequested = true;
 volatile long msTurnedOn = 0;
-const long msOnTime=30*1000;
-const long msTimeout=5000;
-const long msMaxDataAge=30L*60L*1000;
-const long msScreenUpdateInterval=1000;
+
+
+
+// const long msScreenUpdateInterval=1000;
 
 long msScreenUpdated=0;
 
@@ -42,7 +41,7 @@ char stringForecast1[Payload];
 char stringForecastNow[Payload];
 char stringForecastLater[Payload];
 char stringForecastConditions[Payload];
-char stringBuffer[Payload];
+// char stringBuffer[Payload];
 
 #ifdef LCD_I2C
 
@@ -60,50 +59,55 @@ void setup()
   pinMode(2,INPUT);
 
   //  Serial.begin(115200);
-  inputString.reserve(200);
+  inputString.reserve(Payload+1);
   lcd.begin(16, 2);
-  #ifdef LCD_I2C
-    lcd.on();
-  #endif
+  display();
 
+  backlight();
+  noBacklight();
   delay(2);
   lcd.clear();
   lcd.print("Starting radio..");
   Mirf.spi = &MirfHardwareSpi;
+#ifdef MIRF_PINS_PCB
+  Mirf.cePin=8;
+  Mirf.csnPin=9;
+#endif
   Mirf.init();
 
   // name the receiving channel - must match tranmitter setting!
-  Mirf.setRADDR((byte *)"WCLKK");
+  Mirf.setRADDR((byte *)nameClient);
 
 
   Mirf.payload=Payload;
 
   Mirf.channel = 10;
-  
+
 
   // configure 15 retries, 500us between attempts
   Mirf.configRegister(SETUP_RETR,(B0001<<ARD ) | (B1111<<ARC));
 
-  // now config the device.... 
-  Mirf.config();  
-
   // Set 1MHz data rate - this increases the range slightly
   Mirf.configRegister(RF_SETUP,0x06);
 
-  Mirf.setTADDR((byte *)"BASES");
-  Mirf.send((byte *)"WCLKKStarted");
-  //  Serial.print("booted with ");
-  //  Serial.println(Mirf.getStatus());
+  // now config the device.... 
+  Mirf.config();  
 
-  blockForSend();
 
+  Mirf.setTADDR((byte *)nameBase);
+
+#ifdef LCD_I2C
+//  inputString="BASESWCLKKStarting-i2c";
+  SendToBase("Starting-i2c");
+#else
+//  inputString="BASESWCLKKStarting-4bit";
+  SendToBase("Starting-4bit");
+#endif
+
+  //SendMessage(inputString);
 
   byte status=Mirf.getStatus();
   if (status==14) {
-    //    lcd.clear();
-    //   lcd.println("");
-    //  lcd.println("");
-
     myLCDClear();
     delay(5);
     lcd.print("Radio started.");
@@ -118,14 +122,19 @@ void setup()
     lcd.print(status);
   }
 
+
   attachInterrupt(0,flagUpdate,RISING);
   flagUpdate();
-  //updateRequested=true;
+
+//  inputString="BASESWCLKKStarted";
+//  SendMessage(inputString);
+  SendToBase("Started");
 
 
 }
 
 void myLCDClear() {
+  // The library builtin doesn't seem to work with i2c. TODO branch this out
   lcd.home();
   lcd.write("                ");
   lcd.setCursor(0,1);
@@ -135,6 +144,7 @@ void myLCDClear() {
 void flagUpdate() {
   updateRequested=true;
   msTurnedOn=millis();
+  //  backlight();
   //  lcd.on();
   //  paintScreen();
   paintRequested=true;
@@ -146,49 +156,38 @@ void loop()
 {
 
   if (paintRequested==true) {
-    #ifdef LCD_I2C
-    lcd.on();
-    #endif
+    display();
+    backlight();
     paintScreen();
     paintRequested=false;  
+    //    inputString="BASESWCLKKpainting";
+    //    SendMessage(inputString);
   }
 
-  //  digitalWrite(13,updateRequested);
-  /*
-  Serial.println("Req, Got, On:");
-   Serial.println(msRequestedForecast);
-   Serial.println(msGotForecast);
-   
-   Serial.println(msTurnedOn);
-   */
-
   byte data[Payload];
-
 
   if (updateRequested==true) {
 
     updateRequested=false;
-    if (millis() - msGotForecast > msMaxDataAge || msGotForecast==0) {
-      // myLCDClear(); 
-      // lcd.print("Requesting...");
+    if ( ( millis() - msGotForecast > msMaxDataAge ) || msGotForecast==0) {
+
       lcd.setCursor(strlen(stringForecastNow),0);
-      //lcd.cursor();
       lcd.blink();
       msRequestedForecast=millis();
-      inputString="BASESWCLKKupdate";
-      send2824Message(inputString);
+//      inputString="BASESWCLKKupdate";
+//      SendMessage(inputString);
+      SendToBase("update");
       blockForSend();
 
     } 
     else {
-
       // paintScreen();
 
     }
 
   }
   if ((millis() - msRequestedForecast > msTimeout ) && (millis() - msRequestedForecast < msTimeout+msTimeout) && (millis() - msGotForecast > msTimeout )) {
-    updateRequested=true;
+    flagUpdate();
     //timeout
   }
 
@@ -197,7 +196,8 @@ void loop()
   {
     if (millis() - msRequestedForecast < msTimeout) {
       msGotForecast = millis();
-      // Let's lock out unrelated status updates from the base station.
+      // We don't want to cache unrelated status updates from the base station
+      // - if a message is received that was not recently requested, do not update receive time
 
     }
 
@@ -212,47 +212,48 @@ void loop()
     for (byte a=0;a<Payload;a++) {
       if (theMessage[a]=='\r' || theMessage[a]=='\n'){
         theMessage[a]='\0';
+        // Look for linebreaks and swap them out for end-of-string
       }
     }
     byte x=0;
     byte y=0;
     byte length=strlen(theMessage);
     switch (theLine) {
-    case '0':
+    case '0': // first line full
       strcpy(stringForecast0,theMessage);
       x=0;
       y=0;
       length=16;
       break;
 
-    case '1':
+    case '1': // second line full
       strcpy(stringForecast1,theMessage);
       x=0;
       y=1;
       length=16;
       break;
-    case 'C':
+    case 'C': // current Conditions
       strcpy(stringForecastConditions,theMessage);
       x=0;
       y=1;
       break;
-    case 'N':
+    case 'N': // temp Now
       strcpy(stringForecastNow,theMessage);
       x=0;
       y=0;
       break;
-    case 'L':
+    case 'L':  // temp Later
       strcpy(stringForecastLater,theMessage);
       x=16-strlen(stringForecastLater);
       y=0;
       break;
-    case 'A':
+    case 'A':  // Ack request; don't print anything
       x=30;
       y=4;
       length=0;
       theMessage[0]='\0';
       msRequestedForecast=millis();
-      
+
     }
 
     lcd.setCursor(x,y);
@@ -280,17 +281,15 @@ void loop()
 
   delay(250);
   if (millis() - msTurnedOn > msOnTime ) {
-    #ifdef LCD_I2C
-    lcd.off();
-#endif
+    noBacklight();
+    noDisplay();
 
   } 
   else {
-        #ifdef LCD_I2C
 
-    lcd.on();
-    #endif
-    
+    display();
+    backlight();
+
     //    paintScreen();
 
   }
@@ -313,7 +312,24 @@ void serialEvent() {
   }
 }
 
-void send2824Message(String theMessage) {
+void SendToBase(String theMessage) {
+  char thePayload[Payload];
+  char theMessageChar[Payload];
+
+  Mirf.setTADDR((byte *)nameBase);
+  Mirf.config();
+
+  strcpy(thePayload,nameClient);
+  theMessage.toCharArray(theMessageChar,Payload);
+  strcat(thePayload,theMessageChar);
+  
+  Mirf.send((byte *)thePayload);
+}
+
+
+
+
+void SendMessage(String theMessage) {
   char theTarget[6];
   char thePayload[Payload];
   char theSource[6];
@@ -368,6 +384,54 @@ void paintScreen() {
   }
 
 }
+
+
+void display() {
+
+#ifdef LCD_I2C
+
+  lcd.on();
+#else
+  lcd.display();
+#endif
+
+}
+
+void noDisplay() {
+#ifdef LCD_I2C
+
+  lcd.off();
+#else
+  lcd.noDisplay();
+#endif
+
+
+}
+
+
+
+void backlight() {
+#ifdef LCD_I2C
+
+  lcd.backlight();
+#else
+  pinMode(LCD_BACKLIGHT_PIN,OUTPUT);
+  digitalWrite(LCD_BACKLIGHT_PIN, HIGH);
+#endif
+
+}
+void noBacklight() {
+#ifdef LCD_I2C
+  lcd.noBacklight();
+#else
+
+  digitalWrite(LCD_BACKLIGHT_PIN, LOW);
+  //  pinMode(LCD_BACKLIGHT_PIN,INPUT);
+#endif
+}
+
+
+
 
 
 
