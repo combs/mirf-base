@@ -8,5 +8,5 @@ const long msTimeout=5000;
 const long msMaxDataAge=30L*60L*1000;
 
 
-
+#define LCD_UPDATES_EXTEND_ON_TIME
 
