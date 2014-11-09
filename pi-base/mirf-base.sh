@@ -38,6 +38,7 @@ while read TO FROM DATA DETAILS; do
 							UPDATE*)
 							#	echo "Update requested"
 								# do stuff;
+								echo -ne "."
 							;;
 							Message_sent_to*)
 								echo "Message successfully sent to $DETAILS."
