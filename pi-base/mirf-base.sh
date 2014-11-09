@@ -6,7 +6,7 @@ BASE=/var/local/nrf24
 while sleep 2; do
 SERIAL=`ls -t /dev/tty.usb* /dev/ttyA* 2>/dev/null| grep -v ttyAMA0 | head -1`
 echo "using $SERIAL" 
-stty -F $SERIAL cs8 500000 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts >/dev/null
+stty -F $SERIAL cs8 115200 ignbrk flusho stflush -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts >/dev/null
  
 exec 3<> $SERIAL 
 sleep 0.2
