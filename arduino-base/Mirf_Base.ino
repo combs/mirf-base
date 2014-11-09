@@ -13,8 +13,8 @@ byte iterator=0;
 
 void setup()
 {
-  Serial.begin(500000);
-  inputString.reserve(200);
+  Serial.begin(115200);
+  inputString.reserve(100);
 
   Mirf.spi = &MirfHardwareSpi;
   Mirf.init();
@@ -62,10 +62,11 @@ void setup()
 void loop()
 {
   iterator++;
-  if (iterator % 2 == 0 ) {
-    
+  if (iterator == 200 ) {
+    iterator=0;
     Serial.println("BASES BASES UPDATE");
-
+    Serial.flush();
+    
   }
   
 
@@ -74,7 +75,6 @@ void loop()
   // is there any data pending? 
   if( Mirf.dataReady() )
   {
-    // well, get it
     Mirf.getData((byte *) &data);
 
     // ... and write it out to the PC
@@ -94,6 +94,8 @@ void loop()
     Serial.print(theFrom);
     Serial.print(" ");
     Serial.println(theMessage);
+    Serial.flush();
+    
   }
   if (stringComplete==true) {
 
@@ -105,19 +107,18 @@ void loop()
 
 
     Mirf.setTADDR((byte *)theTarget);
-
+    Mirf.setRADDR((byte *)"BASES");
     Mirf.config();
     Mirf.send((byte *)theMessage);
+    blockForSend();
 
-    while( Mirf.isSending() )
-    {
-      delay(1);
-    }
     Serial.print("BASES BASES Message_sent_to ");
     Serial.println(theTarget);
+    Serial.flush();
+    
     stringComplete=false;
     inputString="";
-
+    
 
 
   }
@@ -125,10 +126,11 @@ void loop()
   
   
   // Serial.println(Mirf.getStatus());
-  delay(50);
 
+  delayMicroseconds(500);
 
 }
+
 
 void serialEvent() {
   while (Serial.available()) {
@@ -145,5 +147,12 @@ void serialEvent() {
 }
 
 
+void blockForSend() {
+
+  while( Mirf.isSending() )
+  {
+    delay(1);
+  }
+}
 
 
