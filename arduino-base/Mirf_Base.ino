@@ -62,7 +62,7 @@ void setup()
 void loop()
 {
   iterator++;
-  if (iterator % 5 == 0 ) {
+  if (iterator % 2 == 0 ) {
     
     Serial.println("BASES BASES UPDATE");
 
