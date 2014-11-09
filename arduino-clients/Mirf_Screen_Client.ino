@@ -78,6 +78,8 @@ void setup()
   // name the receiving channel - must match tranmitter setting!
   Mirf.setRADDR((byte *)nameClient);
 
+  Mirf.setTADDR((byte *)nameBase);
+
 
   Mirf.payload=Payload;
 
@@ -94,13 +96,12 @@ void setup()
   Mirf.config();  
 
 
-  Mirf.setTADDR((byte *)nameBase);
 
 #ifdef LCD_I2C
-//  inputString="BASESWCLKKStarting-i2c";
+  //  inputString="BASESWCLKKStarting-i2c";
   SendToBase("Starting-i2c");
 #else
-//  inputString="BASESWCLKKStarting-4bit";
+  //  inputString="BASESWCLKKStarting-4bit";
   SendToBase("Starting-4bit");
 #endif
 
@@ -110,9 +111,11 @@ void setup()
   if (status==14) {
     myLCDClear();
     delay(5);
-    lcd.print("Radio started.");
+    lcd.print(nameClient);
+    lcd.print(" started.");
     lcd.setCursor(0,1); 
-    lcd.print("Contacting base"); 
+    lcd.print("Contacting "); 
+    lcd.print(nameBase);
   } 
   else {
     lcd.clear();
@@ -126,8 +129,8 @@ void setup()
   attachInterrupt(0,flagUpdate,RISING);
   flagUpdate();
 
-//  inputString="BASESWCLKKStarted";
-//  SendMessage(inputString);
+  //  inputString="BASESWCLKKStarted";
+  //  SendMessage(inputString);
   SendToBase("Started");
 
 
@@ -171,7 +174,7 @@ void loop()
     updateRequested=false;
     if ( ( millis() - msGotForecast > msMaxDataAge ) || msGotForecast==0) {
       requestUpdate();
-      
+
 
     } 
     else {
@@ -181,21 +184,28 @@ void loop()
 
   }
   if ((millis() - msRequestedForecast > msTimeout ) && (millis() - msRequestedForecast < msTimeout+msTimeout) && (millis() - msGotForecast > msTimeout )) {
-    flagUpdate();
+    //    updateRequested=true;
+    //flagUpdate();
+    SendToBase("Timeout");
+    requestUpdate();
+    
     //timeout
   }
 
   // is there any data pending? 
   if( Mirf.dataReady() )
   {
-    if (millis() - msRequestedForecast < msTimeout) {
-      msGotForecast = millis();
+          msGotForecast = millis();
+   // if (millis() - msRequestedForecast < msTimeout) {
+      // msGotForecast = millis();
       // We don't want to cache unrelated status updates from the base station
       // - if a message is received that was not recently requested, do not update receive time
 
-    }
+    //}
 
+#ifdef LCD_UPDATES_EXTEND_ON_TIME
     msTurnedOn=millis();
+#endif
     // lcd.noCursor();
     lcd.noBlink();
     Mirf.getData((byte *) &data);
@@ -274,26 +284,30 @@ void loop()
 
 
   delay(250);
+//  char theBuffer[Payload]="";
+//  ltoa(msTurnedOn,theBuffer,10);
+//  SendToBase(theBuffer);
+  
   if (millis() - msTurnedOn > msOnTime ) {
-    #ifdef LCD_CLEAR_ON_SLEEP
+#ifdef LCD_CLEAR_ON_SLEEP
     myLCDClear();
-    
-    #endif
-    
+#endif
+
     noBacklight();
     noDisplay();
 
   } 
   else {
-    if ( ( millis() - msGotForecast > msMaxDataAge ) && ( millis() - msRequestedForecast ) > msTimeout ) {
+    if ( ( ( millis() - msGotForecast ) > msMaxDataAge ) && ( ( millis() - msRequestedForecast ) > msTimeout ) ) {
+        SendToBase("Refresh");
       requestUpdate();
       // screen is on, data is old, but let's not flagUpdate because that will keep screen on longer
-      
+  
     }
-    
+
     display();
     backlight();
-
+ 
     //    paintScreen();
 
   }
@@ -303,14 +317,14 @@ void loop()
 }
 
 void requestUpdate() {
-  
-        lcd.setCursor(strlen(stringForecastNow),0);
-      lcd.blink();
-      msRequestedForecast=millis();
-//      inputString="BASESWCLKKupdate";
-//      SendMessage(inputString);
-      SendToBase("update");
-      blockForSend();
+
+  lcd.setCursor(strlen(stringForecastNow),0);
+  lcd.blink();
+  msRequestedForecast=millis();
+  //      inputString="BASESWCLKKupdate";
+  //      SendMessage(inputString);
+  SendToBase("update");
+  blockForSend();
 
 }
 
@@ -333,13 +347,17 @@ void SendToBase(String theMessage) {
   char theMessageChar[Payload];
 
   Mirf.setTADDR((byte *)nameBase);
+  Mirf.setRADDR((byte *)nameClient);
   Mirf.config();
-
+  
+  
   strcpy(thePayload,nameClient);
   theMessage.toCharArray(theMessageChar,Payload);
   strcat(thePayload,theMessageChar);
-  
+
   Mirf.send((byte *)thePayload);
+  blockForSend();
+
 }
 
 
@@ -356,12 +374,14 @@ void SendMessage(String theMessage) {
 
 
   Mirf.setTADDR((byte *)theTarget);
-
+  Mirf.setRADDR((byte *)nameClient);
+  
   //    Mirf.setRADDR((byte *)theSource);
   // do we want this? malformed message could make this node unreachable 
 
   Mirf.config();
   Mirf.send((byte *)thePayload);
+  blockForSend();
 
 }
 
@@ -375,6 +395,13 @@ void blockForSend() {
 
 
 void paintScreen() {
+#ifdef LCD_CLEAR_ON_SLEEP
+
+if (millis() - msGotForecast > msMaxDataAge) {
+  myLCDClear();
+  return;
+}
+#endif
 
   lcd.setCursor(0,0);
   if (strlen(stringForecastNow) > 1) {
@@ -445,6 +472,7 @@ void noBacklight() {
   //  pinMode(LCD_BACKLIGHT_PIN,INPUT);
 #endif
 }
+
 
 
 
