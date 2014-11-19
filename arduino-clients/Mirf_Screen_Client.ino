@@ -557,7 +557,7 @@ void setup_watchdog(int timerPrescaler) {
   WDTCSR = bb; //Set new watchdog timeout value
   WDTCSR |= _BV(WDIE); //Set the interrupt enable, this will keep unit from resetting after each int
 
-#else
+#elif defined __AVR_ATtiny85__
 
   // attiny
 
@@ -567,6 +567,9 @@ void setup_watchdog(int timerPrescaler) {
   WDTCR = bb; //Set new watchdog timeout value
   WDTCR |= _BV(WDIE); //Set the interrupt enable, this will keep unit from resetting after each int
 
+#else 
+//??
+#error "I don't know how to handle your AVR in setup_watchdog"
 #endif
 
 
