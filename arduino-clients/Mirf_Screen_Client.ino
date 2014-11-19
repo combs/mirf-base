@@ -2,23 +2,25 @@
 #include <Mirf.h>
 #include <Wire.h>
 #include <MirfHardwareSpiDriver.h>
-
+#include <avr/wdt.h>
+#include <avr/sleep.h>
+#include <avr/power.h>
 
 void setup();
 
-#include <LiquidCrystal_I2C.h>
+// #include <LiquidCrystal_I2C.h>
 
-//#include <LiquidCrystal.h>
+#include <LiquidCrystal.h>
 
 #include "mirfscreenconfig.h"
 
-#define LCD_I2C
-// #define LCD_PCB
+//#define LCD_I2C
+#define LCD_PCB
 
 #define LCD_BACKLIGHT_PIN 10
 
-#define MIRF_PINS_STANDARD
-// #define MIRF_PINS_PCB
+// #define MIRF_PINS_STANDARD
+#define MIRF_PINS_PCB
 
 
 String inputString = "";         // a string to hold incoming data
@@ -53,8 +55,14 @@ LiquidCrystal lcd(7, 6, A3, A2, A1, A0);
 //LiquidCrystal_I2C_simple lcd(0x27,16,2); 
 
 
+
+
+
 void setup()
 {
+
+  wdt_disable();
+  power_adc_disable();
 
   pinMode(2,INPUT);
 
@@ -158,6 +166,9 @@ void flagUpdate() {
 void loop()
 {
 
+  waking();
+
+
   if (paintRequested==true) {
     display();
     backlight();
@@ -173,6 +184,7 @@ void loop()
 
     updateRequested=false;
     if ( ( millis() - msGotForecast > msMaxDataAge ) || msGotForecast==0) {
+      msRequestedForecast=millis();
       requestUpdate();
 
 
@@ -183,23 +195,31 @@ void loop()
     }
 
   }
-  if ((millis() - msRequestedForecast > msTimeout ) && (millis() - msRequestedForecast < msTimeout+msTimeout) && (millis() - msGotForecast > msTimeout )) {
+  if ((millis() - msRequestedForecast > msTimeout ) && (millis() - msRequestedForecast < ( msTimeout+msTimeout ) ) && (millis() - msGotForecast > msTimeout+msTimeout ) ) {
     //    updateRequested=true;
     //flagUpdate();
     SendToBase("Timeout");
+
+    /*
+    char theBuffer[Payload]="";
+     ltoa(msGotForecast,theBuffer,10);
+     SendToBase(theBuffer);
+     */
+
+    msRequestedForecast=millis();
     requestUpdate();
-    
+
     //timeout
   }
 
   // is there any data pending? 
   if( Mirf.dataReady() )
   {
-          msGotForecast = millis();
-   // if (millis() - msRequestedForecast < msTimeout) {
-      // msGotForecast = millis();
-      // We don't want to cache unrelated status updates from the base station
-      // - if a message is received that was not recently requested, do not update receive time
+    msGotForecast = millis();
+    // if (millis() - msRequestedForecast < msTimeout) {
+    // msGotForecast = millis();
+    // We don't want to cache unrelated status updates from the base station
+    // - if a message is received that was not recently requested, do not update receive time
 
     //}
 
@@ -213,6 +233,8 @@ void loop()
     char theLine=thePayload[5];
     char theMessage[Payload];
     thePayload.substring(6).toCharArray(theMessage,Payload);
+
+    //    SendToBase("Ack");
     for (byte a=0;a<Payload;a++) {
       if (theMessage[a]=='\r' || theMessage[a]=='\n'){
         theMessage[a]='\0';
@@ -284,10 +306,10 @@ void loop()
 
 
   delay(250);
-//  char theBuffer[Payload]="";
-//  ltoa(msTurnedOn,theBuffer,10);
-//  SendToBase(theBuffer);
-  
+  //  char theBuffer[Payload]="";
+  //  ltoa(msTurnedOn,theBuffer,10);
+  //  SendToBase(theBuffer);
+
   if (millis() - msTurnedOn > msOnTime ) {
 #ifdef LCD_CLEAR_ON_SLEEP
     myLCDClear();
@@ -295,19 +317,21 @@ void loop()
 
     noBacklight();
     noDisplay();
+    sleeping();
 
   } 
   else {
     if ( ( ( millis() - msGotForecast ) > msMaxDataAge ) && ( ( millis() - msRequestedForecast ) > msTimeout ) ) {
-        SendToBase("Refresh");
+      msRequestedForecast=millis();
+      // SendToBase("Refresh");
       requestUpdate();
       // screen is on, data is old, but let's not flagUpdate because that will keep screen on longer
-  
+
     }
 
     display();
     backlight();
- 
+
     //    paintScreen();
 
   }
@@ -320,11 +344,11 @@ void requestUpdate() {
 
   lcd.setCursor(strlen(stringForecastNow),0);
   lcd.blink();
-  msRequestedForecast=millis();
+  //  msRequestedForecast=millis();
   //      inputString="BASESWCLKKupdate";
   //      SendMessage(inputString);
   SendToBase("update");
-  blockForSend();
+  //  blockForSend();
 
 }
 
@@ -349,8 +373,8 @@ void SendToBase(String theMessage) {
   Mirf.setTADDR((byte *)nameBase);
   Mirf.setRADDR((byte *)nameClient);
   Mirf.config();
-  
-  
+
+
   strcpy(thePayload,nameClient);
   theMessage.toCharArray(theMessageChar,Payload);
   strcat(thePayload,theMessageChar);
@@ -375,7 +399,7 @@ void SendMessage(String theMessage) {
 
   Mirf.setTADDR((byte *)theTarget);
   Mirf.setRADDR((byte *)nameClient);
-  
+
   //    Mirf.setRADDR((byte *)theSource);
   // do we want this? malformed message could make this node unreachable 
 
@@ -397,10 +421,10 @@ void blockForSend() {
 void paintScreen() {
 #ifdef LCD_CLEAR_ON_SLEEP
 
-if (millis() - msGotForecast > msMaxDataAge) {
-  myLCDClear();
-  return;
-}
+  if (millis() - msGotForecast > msMaxDataAge) {
+    myLCDClear();
+    return;
+  }
 #endif
 
   lcd.setCursor(0,0);
@@ -460,6 +484,8 @@ void backlight() {
 #else
   pinMode(LCD_BACKLIGHT_PIN,OUTPUT);
   digitalWrite(LCD_BACKLIGHT_PIN, HIGH);
+  // analogWrite(LCD_BACKLIGHT_PIN, 128);
+
 #endif
 
 }
@@ -478,7 +504,73 @@ void noBacklight() {
 
 
 
+void waking() {
 
+  //  setup_watchdog( 	WDTO_500MS ); //Setup watchdog to go off after 500ms
+
+  wdt_reset();
+
+}
+
+void sleeping() {
+
+
+  // setup_watchdog( 	WDTO_8S ); //Setup watchdog to go off after 500ms
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
+
+  Mirf.powerDown(); 
+  sleep_enable();
+  sei();
+  sleep_cpu();
+  sleep_disable();
+  waking();
+  Mirf.powerUpRx(); 
+  wdt_disable();
+
+
+}
+
+ISR(WDT_vect) {
+
+
+  // buttonPress();  
+
+
+}
+
+
+
+
+
+
+void setup_watchdog(int timerPrescaler) {
+
+  if (timerPrescaler > 9 ) timerPrescaler = 9; //Correct incoming amount if need be
+
+  byte bb = timerPrescaler & 7; 
+  if (timerPrescaler > 7) bb |= (1<<5); //Set the special 5th bit if necessary
+
+#ifdef __AVR_ATmega328P__
+  MCUSR &= ~(1<<WDRF); //Clear the watch dog reset
+  WDTCSR |= (1<<WDCE) | (1<<WDE); //Set WD_change enable, set WD enable
+  WDTCSR = bb; //Set new watchdog timeout value
+  WDTCSR |= _BV(WDIE); //Set the interrupt enable, this will keep unit from resetting after each int
+
+#else
+
+  // attiny
+
+  //This order of commands is important and cannot be combined
+  MCUSR &= ~(1<<WDRF); //Clear the watch dog reset
+  WDTCR |= (1<<WDCE) | (1<<WDE); //Set WD_change enable, set WD enable
+  WDTCR = bb; //Set new watchdog timeout value
+  WDTCR |= _BV(WDIE); //Set the interrupt enable, this will keep unit from resetting after each int
+
+#endif
+
+
+}
 
 
 
