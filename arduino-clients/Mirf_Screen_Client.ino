@@ -215,7 +215,7 @@ void loop()
   // is there any data pending? 
   if( Mirf.dataReady() )
   {
-    msGotForecast = millis();
+
     // if (millis() - msRequestedForecast < msTimeout) {
     // msGotForecast = millis();
     // We don't want to cache unrelated status updates from the base station
@@ -246,6 +246,7 @@ void loop()
     byte length=strlen(theMessage);
     switch (theLine) {
     case '0': // first line full
+      msGotForecast = millis();
       strcpy(stringForecast0,theMessage);
       x=0;
       y=0;
@@ -253,22 +254,26 @@ void loop()
       break;
 
     case '1': // second line full
+      msGotForecast = millis();
       strcpy(stringForecast1,theMessage);
       x=0;
       y=1;
       length=16;
       break;
     case 'C': // current Conditions
+      msGotForecast = millis();
       strcpy(stringForecastConditions,theMessage);
       x=0;
       y=1;
       break;
     case 'N': // temp Now
+      msGotForecast = millis();
       strcpy(stringForecastNow,theMessage);
       x=0;
       y=0;
       break;
     case 'L':  // temp Later
+      msGotForecast = millis();
       strcpy(stringForecastLater,theMessage);
       x=16-strlen(stringForecastLater);
       y=0;
@@ -279,7 +284,18 @@ void loop()
       length=0;
       theMessage[0]='\0';
       msRequestedForecast=millis();
-
+      break;
+    case 'u':
+    case 'r':
+    case 's':
+      x=0;
+      y=1;
+      thePayload="Radio crosstalk";
+      thePayload.toCharArray(theMessage,Payload);
+      length=strlen(theMessage);
+      break;
+    default:
+      break;
     }
 
     lcd.setCursor(x,y);
@@ -382,6 +398,11 @@ void SendToBase(String theMessage) {
   Mirf.send((byte *)thePayload);
   blockForSend();
 
+  // something changes the RADDR to nameBase... auto ack? let's change it back
+
+  Mirf.setRADDR((byte *)nameClient);
+  Mirf.config();
+
 }
 
 
@@ -406,6 +427,11 @@ void SendMessage(String theMessage) {
   Mirf.config();
   Mirf.send((byte *)thePayload);
   blockForSend();
+
+  // something changes the RADDR to nameBase... auto ack? let's change it back
+
+  Mirf.setRADDR((byte *)nameClient);
+  Mirf.config();
 
 }
 
@@ -516,7 +542,7 @@ void sleeping() {
 
 
   // setup_watchdog( 	WDTO_8S ); //Setup watchdog to go off after 500ms
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  set_sleep_mode(SLEEP_MODE_IDLE);
   //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
 
   Mirf.powerDown(); 
@@ -568,12 +594,13 @@ void setup_watchdog(int timerPrescaler) {
   WDTCR |= _BV(WDIE); //Set the interrupt enable, this will keep unit from resetting after each int
 
 #else 
-//??
+  //??
 #error "I don't know how to handle your AVR in setup_watchdog"
 #endif
 
 
 }
+
 
 
 
