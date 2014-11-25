@@ -1,3 +1,3 @@
 #!/bin/bash
-echo -n "BASESSUNNY";date +%s
+echo -n "SUNNYBASES";date +%s
 
