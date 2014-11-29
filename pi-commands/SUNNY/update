@@ -1,5 +1,7 @@
 #!/bin/bash
-LOCALSECONDS=$(expr 60 \* `date +%z` + `date +%s`)
+
+# This will break down for half-hour timezone offsets
+LOCALSECONDS=$(expr `date +%z` / 100 \* 60 \* 60 + `date +%s`)
 echo -n "SUNNYBASES";echo $LOCALSECONDS
 
 
