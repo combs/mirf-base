@@ -1,3 +1,5 @@
 #!/bin/bash
-echo -n "SUNNYBASES";date +%s
+LOCALSECONDS=$(expr 60 \* `date +%z` + `date +%s`)
+echo -n "SUNNYBASES";echo $LOCALSECONDS
+
 
