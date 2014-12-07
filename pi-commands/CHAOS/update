@@ -1,0 +1,182 @@
+#!/usr/bin/php
+<?php
+date_default_timezone_set('America/New_York');
+ini_set('default_socket_timeout', 15);
+$parsed_json=null;
+$errors=0;
+$max_age=60*30;
+$cache_file="/tmp/cache-mirf-CHAOS";
+
+if (file_exists($cache_file)) {
+if (time() - filemtime($cache_file) < $max_age) {
+$lines=file($cache_file);
+foreach ($lines as $line_num => $line) {
+echo $line;
+usleep(50000);
+}
+exit;
+
+}
+else {
+	
+}
+
+} else { 
+	
+	 
+ }
+
+
+require_once('class.xhttp.inc.php');
+header('content-type: text/plain');
+
+/*
+
+$api_key=rtrim(file_get_contents(".google-key"));
+if (!$api_key) {
+ exit("\nPlease put your Google key in ~/.google-key\n");
+}
+
+*/
+
+ 
+ 
+ 
+// Set account login info
+$data['post'] = array(
+  'accountType' => 'HOSTED_OR_GOOGLE',  // indicates a Google account
+  'Email'       => 'ccombs@gmail.com',  // full email address
+  'Passwd'      => 'jtuzwzciiocycmuk',
+  'service'     => 'trendspro', // Name of the Google service
+  'source'      => 'ccombs-example-1.0' // Application's name, e.g. companyName-applicationName-versionID
+);
+
+$response = xhttp::fetch('https://www.google.com/accounts/ClientLogin', $data);
+
+// Test if unsuccessful
+if(!$response['successful']) {
+    echo 'response: '; print_r($response);
+    die();
+}
+
+// Extract Auth
+preg_match('/Auth=(.+)/', $response['body'], $matches);
+$auth = $matches[1];
+
+// Erase POST variables used on the previous xhttp call
+$data = array();
+
+// Set the Authorization header
+$data['headers'] = array(
+    'Authorization' => 'GoogleLogin auth='.$auth,
+    'GData-Version' => '3.0'
+);
+$data['cookies'] = $response['cookies'];
+
+// echo $auth;
+ 
+ 
+ 
+sleep(2);
+
+
+$response = xhttp::fetch('http://www.google.com/trends/fetchComponent?q=unemployment,jobs,attack,fighting,kardashian&cid=TIMESERIES_GRAPH_0&date=today%207-d&export=3&gprop=news', $data);
+
+// CSV data in the response body
+echo $response['body'];
+
+
+ 
+// while (!$parsed_json && $errors<1) {
+
+
+/*
+
+ $json_string_chaos = file_get_contents("http://www.google.com/trends/fetchComponent?q=unemployment,jobs,attack,fighting,kardashian&cid=TIMESERIES_GRAPH_0&date=today%207-d&export=3&gprop=news");
+
+	$json_string_chaos = preg_replace( "/.*.setResponse\(/" , "" ,$json_string_chaos);
+	$json_string_chaos = preg_replace( "/\)$/","",$json_string_chaos);
+	echo $json_string_chaos;	
+$parsed_json = json_decode($json_string_chaos);
+
+	if (!$parsed_json) {
+		$errors++;
+		sleep(2);
+	}
+// }
+
+
+*/
+
+
+/*
+
+// $location = $parsed_json->{'location'}->{'city'};
+$temp_f = $parsed_json->{'current_observation'}->{'temp_f'};
+  
+$this_forecast = $parsed_json->{'forecast'}->{'simpleforecast'}->{'forecastday'}[0];
+
+
+$temp_low = $this_forecast->{'low'}->{'fahrenheit'};
+$temp_high = $this_forecast->{'high'}->{'fahrenheit'};
+$humidity = $this_forecast->{'avehumidity'};
+$rain_inches = $this_forecast->{'qpf_allday'}->{'in'};
+$precip_chance = $this_forecast->{'pop'};
+$snow_inches = $this_forecast->{'snow_allday'}->{'in'};
+$conditions = $this_forecast->{'conditions'};
+
+
+$outputConditions = "WCLKKBASESC";
+$outputNow = "WCLKKBASESN";
+$outputLater = "WCLKKBASESL";
+$output1 = "WCLKKBASES0";
+$output2 = "WCLKKBASES1";
+
+$output1 .=  round($temp_f) . chr(223) . " now. " . $temp_low . "-" . $temp_high . chr(223) . "\n";
+
+// echo $output1;
+// usleep(50000);
+
+$outputNow .=   round($temp_f) . chr(223) . " now. " . "\n";
+$outputLater .=  $temp_low . "-" . $temp_high . chr(223) . "\n";
+
+echo $outputNow;
+file_put_contents($cache_file,$outputNow);
+usleep(50000);
+echo $outputLater;
+file_put_contents($cache_file, $outputLater, FILE_APPEND | LOCK_EX);
+
+
+
+if ($snow_inches > 0 ) {
+	$outputConditions .= round($snow_inches,1) . '" SNOW! (' . $precip_chance . "%)" . "\n";
+	
+	
+} else if ($rain_inches > 0 && $rain_inches < 0.1 ) {
+	
+	$outputConditions .= 'Light mist (' . $precip_chance . "%)" . "\n";
+
+} else if ($rain_inches > 0.1 ) {
+	
+	$outputConditions .= round($rain_inches,1) . '" rain (' . $precip_chance . "%)" . "\n";
+
+} else if ($humidity > 60)  {
+
+	$outputConditions .=  round($humidity) . "% humidity" . "\n";
+} else {
+	
+	$outputConditions .=  ucfirst(strtolower(trim($conditions))) . "\n";
+
+}
+$output2 = $outputConditions;
+$output2=substr_replace($output2,'1',10,1);
+
+usleep(50000);
+echo $outputConditions;
+file_put_contents($cache_file, $outputConditions, FILE_APPEND | LOCK_EX);
+// usleep(50000);
+// echo $output2;
+
+*/
+
+

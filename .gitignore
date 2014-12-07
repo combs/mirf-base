@@ -41,3 +41,7 @@ Thumbs.db
 
 .wunderground-api-key
 
+
+.DS_Store
+
+pi-commands/.DS_Store
