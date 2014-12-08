@@ -1,8 +1,6 @@
 #!/usr/bin/python
 
-import sys
-
-from PIL import Image
+import sys, Image
 
 if len(sys.argv) == 3:
     # print "\nReading: " + sys.argv[1]
