@@ -8,6 +8,9 @@ String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 byte iterator=0;
 
+long msUpdateInterval=100;
+long msLastUpdate=0;
+
 
 
 
@@ -53,17 +56,18 @@ void setup()
   {
     delay(1);
   }
-
+  delay(1000);
   Serial.print("BASES BASES Booted ");
   Serial.println(Mirf.getStatus());
-  delay(2000);
+  delay(1000);
 }
 
 void loop()
 {
-  iterator++;
-  if (iterator == 200 ) {
-    iterator=0;
+  blockForSend();
+    
+  if (millis() - msLastUpdate > msUpdateInterval ) {
+    msLastUpdate=millis();
     Serial.println("BASES BASES UPDATE");
     Serial.flush();
     
@@ -98,23 +102,26 @@ void loop()
     
   }
   if (stringComplete==true) {
-
-    char theTarget[6];
-    char theMessage[Mirf.payload];
-    inputString.substring(0,5).toCharArray(theTarget,6);
-    inputString.substring(5).toCharArray(theMessage,Mirf.payload);
-
-
-
-    Mirf.setTADDR((byte *)theTarget);
-    Mirf.setRADDR((byte *)"BASES");
-    Mirf.config();
-    Mirf.send((byte *)theMessage);
-    blockForSend();
-
-    Serial.print("BASES BASES Message_sent_to ");
-    Serial.println(theTarget);
-    Serial.flush();
+    
+    if (inputString.length()>9){ 
+      char theTarget[6];
+      char theMessage[Mirf.payload];
+      inputString.substring(0,5).toCharArray(theTarget,6);
+      inputString.substring(5).toCharArray(theMessage,Mirf.payload);
+      
+  
+  
+      Mirf.setTADDR((byte *)theTarget);
+      Mirf.setRADDR((byte *)"BASES");
+      Mirf.config();
+      Mirf.send((byte *)theMessage);
+      blockForSend();
+  
+      Serial.print("BASES BASES Message_sent_to ");
+      Serial.println(theTarget);
+      Serial.flush();
+    }
+    
     
     stringComplete=false;
     inputString="";
@@ -126,9 +133,7 @@ void loop()
   
   
   // Serial.println(Mirf.getStatus());
-
-  delayMicroseconds(500);
-
+ 
 }
 
 
@@ -142,6 +147,7 @@ void serialEvent() {
     // so the main loop can do something about it:
     if (inChar == '\n' || inChar == '\r') {
       stringComplete = true;
+      break;
     } 
   }
 }
