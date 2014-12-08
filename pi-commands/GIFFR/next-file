@@ -1,0 +1,31 @@
+#!/usr/bin/php
+<?php
+chdir(dirname(__FILE__));
+
+date_default_timezone_set('America/New_York');
+ini_set('default_socket_timeout', 15);
+$parsed_json=null;
+$errors=0;
+$max_age=60*30;
+$cache_file="/tmp/cache-mirf-GIFFR";
+$cache_dir="/tmp/cache-mirf-GIFFR-files/";
+$base="/var/local/nrf24/";
+$binaries_dir=$base . "binaries/GIFFR/";
+$client="GIFFR";
+$base="BASES";
+
+$address=$argv[1];
+
+$files=scandir($binaries_dir);
+if (count($files)==0) {
+	 exit();	
+}
+
+
+$file=$files[0];
+
+echo $client . $base . "F" . $file;
+
+
+
+?>

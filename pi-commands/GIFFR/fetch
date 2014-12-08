@@ -7,8 +7,14 @@ ini_set('default_socket_timeout', 15);
 $parsed_json=null;
 $errors=0;
 $max_age=60*30;
-$cache_file="/tmp/cache-mirf-GIPHY";
-$cache_dir="/tmp/cache-mirf-GIPHY-files/";
+$cache_file="/tmp/cache-mirf-GIFFR";
+$cache_dir="/tmp/cache-mirf-GIFFR-files/";
+$base="/var/local/nrf24/";
+$binaries_dir=$base . "binaries/GIFFR/";
+$client="GIFFR";
+$base="BASES";
+
+
 
 
 while (!$parsed_json && $errors<2) {
@@ -28,6 +34,9 @@ $parsed_json = json_decode($json_string_newgif);
 if (!file_exists($cache_dir)) {
 	mkdir($cache_dir, 0755);
 }
+if (!file_exists($binaries_dir)) {
+	mkdir($binaries_dir, 0755, true); // recursive
+}
 
 $this_gif = $parsed_json->{'data'}->{'image_url'};
 $this_gif_tags = $parsed_json->{'data'}->{'tags'};
@@ -38,9 +47,13 @@ $this_gif_id_short = substr($this_gif_id,-6);
 
 $gif = file_get_contents($this_gif);
 file_put_contents($cache_dir . $this_gif_id_short . ".gif",$gif);
-file_put_contents($cache_dir . $this_gif_id_short . ".txt",$this_gif_tag);
+file_put_contents($binaries_dir . $this_gif_id_short . ".txt",$this_gif_tag);
+echo $client . $base . "Processing" . "\n";
 $output = shell_exec("./gif2bmps.sh '" . $cache_dir . $this_gif_id_short . ".gif' '" . $cache_dir . $this_gif_id_short . "'");
-$output = shell_exec("./bmps2raw.sh '" . $cache_dir . $this_gif_id_short . "'");
+echo $client . $base . "Processing" . "\n";
+$output = shell_exec("./bmps2raw.sh '" . $cache_dir . $this_gif_id_short . "' '" . $binaries_dir . "'");
+echo "./bmps2raw.sh '" . $cache_dir . $this_gif_id_short . "' '" . $binaries_dir . "'";
+echo $client . $base . "Binaries" . "\n";
 
 
 ?>
