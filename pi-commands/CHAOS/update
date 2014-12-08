@@ -60,6 +60,9 @@ if(!$response['successful']) {
 // Extract Auth
 preg_match('/Auth=(.+)/', $response['body'], $matches);
 $auth = $matches[1];
+// Extract SID
+preg_match('/SID=(.+)/', $response['body'], $matches);
+$sid = $matches[1];
 
 // Erase POST variables used on the previous xhttp call
 $data = array();
@@ -67,7 +70,8 @@ $data = array();
 // Set the Authorization header
 $data['headers'] = array(
     'Authorization' => 'GoogleLogin auth='.$auth,
-    'GData-Version' => '3.0'
+    'GData-Version' => '3.0',
+    'SID' => $sid
 );
 $data['cookies'] = $response['cookies'];
 
