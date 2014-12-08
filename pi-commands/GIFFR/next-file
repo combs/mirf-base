@@ -7,24 +7,24 @@ ini_set('default_socket_timeout', 15);
 $parsed_json=null;
 $errors=0;
 $max_age=60*30;
-$cache_file="/tmp/cache-mirf-GIFFR";
-$cache_dir="/tmp/cache-mirf-GIFFR-files/";
-$base="/var/local/nrf24/";
-$binaries_dir=$base . "binaries/GIFFR/";
 $client="GIFFR";
 $base="BASES";
+$cache_file="/tmp/cache-mirf-" . $client;
+$cache_dir="/tmp/cache-mirf-" . $client . "-files/";
+$base_dir="/var/local/nrf24/";
+$binaries_dir=$base_dir . "binaries/" . $client . "/";
 
 $address=$argv[1];
 
-$files=scandir($binaries_dir);
+$files=array_diff(scandir($binaries_dir), array('..', '.'));
 if (count($files)==0) {
 	 exit();	
 }
 
+reset($files);
+$file=array_shift($files);
 
-$file=$files[0];
-
-echo $client . $base . "F" . $file;
+echo $client . $base . "F" . $file . "\n";
 
 
 
