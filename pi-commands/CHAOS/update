@@ -29,15 +29,13 @@ else {
 
 require_once('class.xhttp.inc.php');
 header('content-type: text/plain');
+ 
 
-/*
-
-$api_key=rtrim(file_get_contents(".google-key"));
-if (!$api_key) {
- exit("\nPlease put your Google key in ~/.google-key\n");
+$google_key=rtrim(file_get_contents(".google-key"));
+if (!$google_key) {
+ exit("\nPlease put your Google application password in ~/.google-key\n");
 }
-
-*/
+ 
 
  
  
@@ -46,7 +44,7 @@ if (!$api_key) {
 $data['post'] = array(
   'accountType' => 'HOSTED_OR_GOOGLE',  // indicates a Google account
   'Email'       => 'ccombs@gmail.com',  // full email address
-  'Passwd'      => 'jtuzwzciiocycmuk',
+  'Passwd'      => $google_key,
   'service'     => 'trendspro', // Name of the Google service
   'source'      => 'ccombs-example-1.0' // Application's name, e.g. companyName-applicationName-versionID
 );
