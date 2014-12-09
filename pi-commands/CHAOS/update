@@ -1,11 +1,24 @@
 #!/usr/bin/php
 <?php
-date_default_timezone_set('America/New_York');
-ini_set('default_socket_timeout', 15);
-$parsed_json=null;
-$errors=0;
-$max_age=60*30;
-$cache_file="/tmp/cache-mirf-CHAOS";
+
+	chdir(dirname(__FILE__));
+	error_reporting(0);
+	date_default_timezone_set('America/New_York');
+	ini_set('default_socket_timeout', 15);
+	$errors=0;
+	$client="CHAOS";
+	$base="BASES";
+	$max_age=60*120;
+	$cache_file="/tmp/cache-mirf-" . $client;
+	$cache_dir="/tmp/cache-mirf-" . $client . "-files/";
+	$store="/var/local/nrf24/";
+	$binaries_dir=$store . "binaries/" . $client . "/";
+
+	
+	
+$ceiling=50000;
+$arduino_ceiling=255;
+
 
 if (file_exists($cache_file)) {
 if (time() - filemtime($cache_file) < $max_age) {
@@ -18,167 +31,72 @@ exit;
 
 }
 else {
-	
+// echo "cache too old";
 }
 
-} else { 
-	
-	 
+} else {
+// echo "cache doesn't exist";
  }
 
 
-require_once('class.xhttp.inc.php');
-header('content-type: text/plain');
- 
+echo $client . $base . "A\n" ;
 
-$google_key=rtrim(file_get_contents(".google-key"));
-if (!$google_key) {
- exit("\nPlease put your Google application password in ~/.google-key\n");
-}
- 
-
- 
- 
- 
-// Set account login info
-$data['post'] = array(
-  'accountType' => 'HOSTED_OR_GOOGLE',  // indicates a Google account
-  'Email'       => 'ccombs@gmail.com',  // full email address
-  'Passwd'      => $google_key,
-  'service'     => 'trendspro', // Name of the Google service
-  'source'      => 'ccombs-example-1.0' // Application's name, e.g. companyName-applicationName-versionID
-);
-
-$response = xhttp::fetch('https://www.google.com/accounts/ClientLogin', $data);
-
-// Test if unsuccessful
-if(!$response['successful']) {
-    echo 'response: '; print_r($response);
-    die();
+$kardashian = file_get_contents("https://www.google.com/search?safe=off&hl=en&gl=us&authuser=0&biw=1237&bih=606&tbs=qdr%3Ad&tbm=nws&q=kardashian&oq=kardashian&gs_l=serp.3..0l8.84159.85111.0.85260.10.5.0.5.5.0.131.546.2j3.5.0.msedr...0...1c.1.59.serp..0.10.558.ATs1EBceKq0");
+if (!$kardashian) {
+	touch($cache_file);
+	exit();
+	
 }
 
-// Extract Auth
-preg_match('/Auth=(.+)/', $response['body'], $matches);
-$auth = $matches[1];
-// Extract SID
-preg_match('/SID=(.+)/', $response['body'], $matches);
-$sid = $matches[1];
-
-// Erase POST variables used on the previous xhttp call
-$data = array();
-
-// Set the Authorization header
-$data['headers'] = array(
-    'Authorization' => 'GoogleLogin auth='.$auth,
-    'GData-Version' => '3.0',
-    'SID' => $sid
-);
-$data['cookies'] = $response['cookies'];
-
-// echo $auth;
+preg_match("/About [\d,]* results/",$kardashian, $matches_kardashian);
+// echo $stats_kardashian[0] . "\n";
+$stats_kardashian=preg_replace("/\D/","",$matches_kardashian[0]);
+$value_kardashian=intval($stats_kardashian/$ceiling*$arduino_ceiling);
  
- 
- 
-sleep(2);
+sleep(32);
 
-
-$response = xhttp::fetch('http://www.google.com/trends/fetchComponent?q=unemployment,jobs,attack,fighting,kardashian&cid=TIMESERIES_GRAPH_0&date=today%207-d&export=3&gprop=news', $data);
-
-// CSV data in the response body
-echo $response['body'];
-
-
- 
-// while (!$parsed_json && $errors<1) {
-
-
-/*
-
- $json_string_chaos = file_get_contents("http://www.google.com/trends/fetchComponent?q=unemployment,jobs,attack,fighting,kardashian&cid=TIMESERIES_GRAPH_0&date=today%207-d&export=3&gprop=news");
-
-	$json_string_chaos = preg_replace( "/.*.setResponse\(/" , "" ,$json_string_chaos);
-	$json_string_chaos = preg_replace( "/\)$/","",$json_string_chaos);
-	echo $json_string_chaos;	
-$parsed_json = json_decode($json_string_chaos);
-
-	if (!$parsed_json) {
-		$errors++;
-		sleep(2);
-	}
-// }
-
-
-*/
-
-
-/*
-
-// $location = $parsed_json->{'location'}->{'city'};
-$temp_f = $parsed_json->{'current_observation'}->{'temp_f'};
-  
-$this_forecast = $parsed_json->{'forecast'}->{'simpleforecast'}->{'forecastday'}[0];
-
-
-$temp_low = $this_forecast->{'low'}->{'fahrenheit'};
-$temp_high = $this_forecast->{'high'}->{'fahrenheit'};
-$humidity = $this_forecast->{'avehumidity'};
-$rain_inches = $this_forecast->{'qpf_allday'}->{'in'};
-$precip_chance = $this_forecast->{'pop'};
-$snow_inches = $this_forecast->{'snow_allday'}->{'in'};
-$conditions = $this_forecast->{'conditions'};
-
-
-$outputConditions = "WCLKKBASESC";
-$outputNow = "WCLKKBASESN";
-$outputLater = "WCLKKBASESL";
-$output1 = "WCLKKBASES0";
-$output2 = "WCLKKBASES1";
-
-$output1 .=  round($temp_f) . chr(223) . " now. " . $temp_low . "-" . $temp_high . chr(223) . "\n";
-
-// echo $output1;
-// usleep(50000);
-
-$outputNow .=   round($temp_f) . chr(223) . " now. " . "\n";
-$outputLater .=  $temp_low . "-" . $temp_high . chr(223) . "\n";
-
-echo $outputNow;
-file_put_contents($cache_file,$outputNow);
-usleep(50000);
-echo $outputLater;
-file_put_contents($cache_file, $outputLater, FILE_APPEND | LOCK_EX);
-
-
-
-if ($snow_inches > 0 ) {
-	$outputConditions .= round($snow_inches,1) . '" SNOW! (' . $precip_chance . "%)" . "\n";
+$unrest = file_get_contents("https://www.google.com/search?safe=off&hl=en&gl=us&authuser=0&biw=1237&bih=606&tbs=qdr%3Ad&tbm=nws&q=unrest&oq=unrest&gs_l=serp.3..0l8.84159.85111.0.85260.10.5.0.5.5.0.131.546.2j3.5.0.msedr...0...1c.1.59.serp..0.10.558.ATs1EBceKq0");
+if (!$unrest) {
+	touch($cache_file);
+	exit();
 	
-	
-} else if ($rain_inches > 0 && $rain_inches < 0.1 ) {
-	
-	$outputConditions .= 'Light mist (' . $precip_chance . "%)" . "\n";
-
-} else if ($rain_inches > 0.1 ) {
-	
-	$outputConditions .= round($rain_inches,1) . '" rain (' . $precip_chance . "%)" . "\n";
-
-} else if ($humidity > 60)  {
-
-	$outputConditions .=  round($humidity) . "% humidity" . "\n";
-} else {
-	
-	$outputConditions .=  ucfirst(strtolower(trim($conditions))) . "\n";
-
 }
-$output2 = $outputConditions;
-$output2=substr_replace($output2,'1',10,1);
 
-usleep(50000);
-echo $outputConditions;
-file_put_contents($cache_file, $outputConditions, FILE_APPEND | LOCK_EX);
-// usleep(50000);
-// echo $output2;
+preg_match("/About [\d,]* results/",$unrest, $matches_unrest);
+// echo $matches_unrest[0] . "\n";
 
-*/
+$stats_unrest=preg_replace("/\D/","",$matches_unrest[0]);
+
+$value_unrest=intval($stats_unrest/$ceiling*$arduino_ceiling);
+ 
+sleep(19);
 
 
+$unemployment = file_get_contents("https://www.google.com/search?safe=off&hl=en&gl=us&authuser=0&biw=1237&bih=606&tbs=qdr%3Ad&tbm=nws&q=unemployment&oq=unemployment&gs_l=serp.3..0l8.84159.85111.0.85260.10.5.0.5.5.0.131.546.2j3.5.0.msedr...0...1c.1.59.serp..0.10.558.ATs1EBceKq0");
+if (!$unemployment) {
+	touch($cache_file);
+	exit();
+	
+}
+
+
+preg_match("/About [\d,]* results/",$unemployment, $matches_unemployment);
+// echo $matches_unemployment[0] . "\n";
+
+$stats_unemployment=preg_replace("/\D/","",$matches_unemployment[0]);
+$value_unemployment=intval($stats_unemployment/$ceiling*$arduino_ceiling);
+
+ 
+
+
+
+$string= $client . $base . "V" . sprintf("%03d", $value_unemployment) . sprintf("%03d", $value_unrest) . sprintf("%03d", $value_kardashian)  . "\n";
+echo $string;
+
+file_put_contents($cache_file,$string);
+
+
+
+
+
+?>
