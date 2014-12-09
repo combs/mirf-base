@@ -63,6 +63,7 @@
 		$this_read=fread($handle, 8192);
 		$contents .= $this_read;
 		fwrite($handle,$this_read);
+		usleep(100000);
 	}
 
 	fsockclose($remote);
