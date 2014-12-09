@@ -1,0 +1,47 @@
+#!/usr/bin/php
+<?php
+chdir(dirname(__FILE__));
+
+date_default_timezone_set('America/New_York');
+ini_set('default_socket_timeout', 15);
+$parsed_json=null;
+$errors=0;
+$max_age=60*30;
+$client="GIFFR";
+$base="BASES";
+$cache_file="/tmp/cache-mirf-" . $client;
+$cache_dir="/tmp/cache-mirf-" . $client . "-files/";
+$base_dir="/var/local/nrf24/";
+$binaries_dir=$base_dir . "binaries/" . $client . "/";
+
+$param=$argv[1];
+$params=preg_split("/-/",$param);
+$filename=$params[0] ;
+if (!isset($filename)) { exit("No filename specified. Client syntax: filename-bytes\n");}
+$size=$params[1] ;
+
+if (!isset($size)) {  exit("No filesize specified. Client syntax: filename-bytes\n");}
+
+
+if ($filename != basename($filename)) {
+	exit("Attempt to change directories denied for $filename.\n");
+}
+
+$filename=basename($filename);
+
+$filesize=filesize($binaries_dir . $filename);
+if ($size != $filesize) {
+	echo $client . $base . "N" . $filename;
+} else {
+	echo $client . $base . "Y" . $filename;
+	if (!unlink($binaries_dir . $filename)) {
+		exit("Couldn't remove " . $binaries_dir . $filename) ;
+	}
+	}
+
+
+
+ 
+
+
+?>
