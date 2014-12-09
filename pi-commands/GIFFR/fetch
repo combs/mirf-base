@@ -43,6 +43,6 @@
 	$output = shell_exec("./gif2bmps.sh '" . $cache_dir . $this_gif_id_short . ".gif' '" . $cache_dir . $this_gif_id_short . "'");
 	echo $client . $base . "Processing" . "\n";
 	$output = shell_exec("./bmps2raw.sh '" . $cache_dir . $this_gif_id_short . "' '" . $binaries_dir . "'");
-	echo "./bmps2raw.sh '" . $cache_dir . $this_gif_id_short . "' '" . $binaries_dir . "'";
+
 	echo $client . $base . "Binaries" . "\n";
 	?>
