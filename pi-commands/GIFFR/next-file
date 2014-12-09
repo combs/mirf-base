@@ -18,6 +18,7 @@ $address=$argv[1];
 
 $files=array_diff(scandir($binaries_dir), array('..', '.'));
 if (count($files)==0) {
+	echo $client . $base . "D\n";"
 	 exit();	
 }
 
@@ -25,7 +26,7 @@ reset($files);
 $file=array_shift($files);
 
 echo $client . $base . "F" . $file . "\n";
-
+ 
 
 
 ?>
