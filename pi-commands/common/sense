@@ -4,8 +4,26 @@
 
 	if [ "$FROM" != "" ] 
 		then
-		if [ -x "../$FROM/update" ]
-			then
-			../$FROM/update $FROM $DETAILS
-		fi
+		TEMP=`mktemp /tmp/nrf24.XXXXX`
+		ZONES=`find $BASE/zones/ -name WCLKK | sed -e 's:/[^/]*$::' `
+		echo $ZONES
+		for ZONE in $ZONES
+			do find $ZONE -type f -maxdepth 1 -mindepth 1 | sed -e 's:.*/::' >> $TEMP
+		done
+		CLIENTS=`cat $TEMP|sort|uniq`
+		echo $CLIENTS
+		for CLIENT in $CLIENTS
+		do		
+			if [ "$CLIENT" != "" ] 
+				then	
+				if [ -x "../$CLIENT/zone-sense" ]
+					then
+					../$CLIENT/zone-sense $FROM $DETAILS
+				elif [ -x "../$CLIENT/update" ]
+					then
+					../$CLIENT/update $FROM $DETAILS
+				fi
+			fi
+		done
+		
 	fi
