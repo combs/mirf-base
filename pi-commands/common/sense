@@ -1,13 +1,11 @@
 #!/bin/bash
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-BASE=`echo $DIR|sed -e 's:/[^/]*commands/.*::'`
-FROM=$1
-shift
+
+. ../common/get-directories
 
 	if [ "$FROM" != "" ] 
 		then
 		if [ -x "../$FROM/update" ]
 			then
-			../$FROM/update $FROM "$@"
+			../$FROM/update $FROM $DETAILS
 		fi
 	fi
