@@ -8,22 +8,22 @@ $max_age=60*30;
 $cache_file="/tmp/cache-mirf-WCLKK";
 
 if (file_exists($cache_file)) {
-if (time() - filemtime($cache_file) < $max_age) {
-$lines=file($cache_file);
-foreach ($lines as $line_num => $line) {
-echo $line;
-usleep(50000);
-}
-exit;
-
-}
+	if (time() - filemtime($cache_file) < $max_age) {
+		$lines=file($cache_file);
+		foreach ($lines as $line_num => $line) {
+			echo $line;
+			usleep(50000);
+		}
+		exit;
+		
+	}
 else {
-// echo "cache too old";
+	// echo "cache too old";
 }
 
 } else {
-// echo "cache doesn't exist";
- }
+	// echo "cache doesn't exist";
+}
 
 
 
