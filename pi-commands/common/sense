@@ -5,13 +5,16 @@
 	if [ "$FROM" != "" ] 
 		then
 		TEMP=`mktemp /tmp/nrf24.XXXXX`
-		ZONES=`find $BASE/zones/ -name WCLKK | sed -e 's:/[^/]*$::' `
-		echo $ZONES
+		ZONES=`find $BASE/zones/ -name "$FROM" | sed -e 's:/[^/]*$::' `
+		
 		for ZONE in $ZONES
-			do find $ZONE -type f -maxdepth 1 -mindepth 1 | sed -e 's:.*/::' >> $TEMP
+			do 
+			if [ "$ZONE" != "" ] 
+				then
+					find "$ZONE" -type f -maxdepth 1 -mindepth 1 | sed -e 's:.*/::' >> $TEMP
+			fi
 		done
 		CLIENTS=`cat $TEMP|sort|uniq`
-		echo $CLIENTS
 		for CLIENT in $CLIENTS
 		do		
 			if [ "$CLIENT" != "" ] 
@@ -25,5 +28,7 @@
 				fi
 			fi
 		done
-		
+		rm $TEMP
+
 	fi
+
