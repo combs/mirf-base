@@ -1,5 +1,6 @@
 #!/usr/bin/php
 <?php
+chdir(dirname(__FILE__));
 date_default_timezone_set('America/New_York');
 ini_set('default_socket_timeout', 15);
 $parsed_json=null;
@@ -29,7 +30,7 @@ else {
 
 $api_key=rtrim(file_get_contents(".wunderground-api-key"));
 if (!$api_key) {
- exit("\nPlease put your Weather Underground API key in ~/.wunderground-api-key\n");
+ exit("\nPlease put your Weather Underground API key in .wunderground-api-key\n");
 }
 
 while (!$parsed_json && $errors<2) {
