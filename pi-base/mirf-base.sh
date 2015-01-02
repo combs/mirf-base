@@ -26,12 +26,12 @@ while read TO FROM DATA DETAILS; do
 			then
 			echo "Calling $BASE/commands/$FROM/$DATA"
 			
-			$BASE/commands/$FROM/$DATA $DETAILS >&3
+			$BASE/commands/$FROM/$DATA $FROM $DETAILS >&3
 		elif [ -x "$BASE/commands/common/$DATA" ]
 			then
 			echo "Calling $BASE/commands/common/$DATA"
 			
-			$BASE/commands/$FROM/$DATA $DETAILS>&3
+			$BASE/commands/common/$DATA $FROM $DETAILS >&3
 		else
 			
 			# process fields here, and access them with $date, $time, etc.
