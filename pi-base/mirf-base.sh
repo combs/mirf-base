@@ -20,6 +20,7 @@ while read TO FROM DATA DETAILS; do
 	 if [ "$FROM" != "" ] 
 		then
 			
+			WRITE=false
 			
 		if [ -x "$BASE/commands/$FROM/$DATA" ]
 			then
@@ -33,7 +34,6 @@ while read TO FROM DATA DETAILS; do
 			$BASE/commands/$FROM/$DATA $DETAILS>&3
 		else
 			
-			WRITE=false
 			# process fields here, and access them with $date, $time, etc.
 			case "$FROM" in
 				BASES)
