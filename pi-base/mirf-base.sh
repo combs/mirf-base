@@ -25,7 +25,7 @@ while read TO FROM DATA DETAILS; do
 			then
 			echo "Calling $BASE/commands/$FROM/$DATA"
 			
-			$BASE/commands/$FROM/$DATA >&3
+			$BASE/commands/$FROM/$DATA $DETAILS >&3
 		else
 			
 			WRITE=false
