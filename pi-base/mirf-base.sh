@@ -27,9 +27,9 @@ while read TO FROM DATA DETAILS; do
 			echo "Calling $BASE/commands/$FROM/$DATA"
 			
 			$BASE/commands/$FROM/$DATA $DETAILS >&3
-		elif [ -x "$BASE/commands/common/$FROM/$DATA" ]
+		elif [ -x "$BASE/commands/common/$DATA" ]
 			then
-			echo "Calling $BASE/commands/common/$FROM/$DATA"
+			echo "Calling $BASE/commands/common/$DATA"
 			
 			$BASE/commands/$FROM/$DATA $DETAILS>&3
 		else
