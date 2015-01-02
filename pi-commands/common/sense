@@ -1,2 +1,13 @@
 #!/bin/bash
-`dirname '$0'`/update
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+BASE=`echo $DIR|sed -e 's:/[^/]*commands/.*::'`
+FROM=$1
+shift
+
+	if [ "$FROM" != "" ] 
+		then
+		if [ -x "../$FROM/update" ]
+			then
+			../$FROM/update $FROM "$@"
+		fi
+	fi
