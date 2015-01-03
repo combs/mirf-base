@@ -15,7 +15,7 @@ sleep 0.2
 while read TO FROM DATA DETAILS; do
 	DATA=`echo $DATA|tr '\r' ' '|sed -e 's:[ \t]*$::'`
 	DETAILS=`echo $DETAILS|tr '\r' ' '|sed -e 's:[ \t]*$::'`
- 	# echo  "From $FROM to $TO, I got '$DATA'"
+ 	 echo  "From $FROM to $TO, I got '$DATA' '$DETAILS'"
 	
 	 if [ "$FROM" != "" ] 
 		then
@@ -27,8 +27,8 @@ while read TO FROM DATA DETAILS; do
 			echo "Calling $BASE/commands/$FROM/$DATA"
 			
 			$BASE/commands/$FROM/$DATA $FROM $DETAILS >&3
-		elif [ -x "$BASE/commands/common/$DATA" ]
-			then
+		elif [ "$DATA" != "" -a -x "$BASE/commands/common/$DATA" ]
+			then 
 			echo "Calling $BASE/commands/common/$DATA"
 			
 			$BASE/commands/common/$DATA $FROM $DETAILS >&3
