@@ -15,7 +15,7 @@ sleep 0.2
 while read TO FROM DATA DETAILS; do
 	DATA=`echo $DATA|tr '\r' ' '|sed -e 's:[ \t]*$::'`
 	DETAILS=`echo $DETAILS|tr '\r' ' '|sed -e 's:[ \t]*$::'`
- 	 echo  "From $FROM to $TO, I got '$DATA' '$DETAILS'"
+ 	#  echo  "From $FROM to $TO, I got '$DATA' '$DETAILS'"
 	
 	 if [ "$FROM" != "" ] 
 		then
