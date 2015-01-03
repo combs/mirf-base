@@ -1,8 +1,10 @@
 #!/bin/bash
 
+cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd
+
 . ../common/get-directories
 
-secho -n "BUSESBASES0H8 MtP: "
+echo -n "BUSESBASES0H8 MtP: "
 curl -s 'http://api.wmata.com/NextBusService.svc/Predictions?StopID=1001919&api_key=yh67yhdqbwypu9tb4mg6c8bc&subscription_key=yh67yhdqbwypu9tb4mg6c8bc' | sed -e 's:<:\n<:g' |  grep Minutes | sed -e 's:<[/]*Minutes>::g' | head -5 | tr '\n' ','|sed -e 's:,:, :g' -e 's:, , :, :g' -e 's:, , :, :g' -e 's:, $::' -e 's:, :,:g'
 echo -ne "\n"
 sleep 0.1
