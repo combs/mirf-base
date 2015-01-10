@@ -61,6 +61,9 @@ preg_match("/About [\d,]* results/",$kardashian, $matches_kardashian);
 // echo $stats_kardashian[0] . "\n";
 $stats_kardashian=preg_replace("/\D/","",$matches_kardashian[0]);
 $value_kardashian=intval($stats_kardashian/$ceiling*$arduino_ceiling);
+if ($value_kardashian > $arduino_ceiling) {
+$value_kardashian=$arduino_ceiling;
+}
  
 sleep(32);
 
@@ -77,6 +80,9 @@ preg_match("/About [\d,]* results/",$unrest, $matches_unrest);
 $stats_unrest=preg_replace("/\D/","",$matches_unrest[0]);
 
 $value_unrest=intval($stats_unrest/$ceiling*$arduino_ceiling);
+if ($value_unrest > $arduino_ceiling) {
+$value_unrest=$arduino_ceiling;
+}
  
 sleep(19);
 
@@ -95,6 +101,9 @@ preg_match("/About [\d,]* results/",$unemployment, $matches_unemployment);
 $stats_unemployment=preg_replace("/\D/","",$matches_unemployment[0]);
 $value_unemployment=intval($stats_unemployment/$ceiling*$arduino_ceiling);
 
+if ($value_unemployment > $arduino_ceiling) {
+$value_unemployment=$arduino_ceiling;
+}
  
 
 
