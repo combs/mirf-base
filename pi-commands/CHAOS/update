@@ -21,12 +21,21 @@ $arduino_ceiling=255;
 
 
 if (file_exists($cache_file)) {
-if (time() - filemtime($cache_file) < $max_age) {
+
+// Output latest cache, no matter what.
+
 $lines=file($cache_file);
 foreach ($lines as $line_num => $line) {
 echo $line;
 usleep(50000);
 }
+
+
+
+if (time() - filemtime($cache_file) < $max_age) {
+
+// If cache was fresh, let's quit.
+
 exit;
 
 }
