@@ -5,6 +5,9 @@
 #include <avr/wdt.h>
 #include <avr/sleep.h>
 #include <avr/power.h>
+#include "watchdog.h"
+#include "MirfClient.h"
+
 
 void setup();
 
@@ -37,7 +40,7 @@ long msScreenUpdated=0;
 
 volatile long msGotForecast = 0;
 volatile long msRequestedForecast = 0;
-const byte Payload = 32;
+// const byte Payload = 32;
 char stringForecast0[Payload];
 char stringForecast1[Payload];
 char stringForecastNow[Payload];
@@ -76,41 +79,18 @@ void setup()
   delay(2);
   lcd.clear();
   lcd.print("Starting radio..");
-  Mirf.spi = &MirfHardwareSpi;
-#ifdef MIRF_PINS_PCB
-  Mirf.cePin=8;
-  Mirf.csnPin=9;
-#endif
-  Mirf.init();
-
-  // name the receiving channel - must match tranmitter setting!
-  Mirf.setRADDR((byte *)nameClient);
-
-  Mirf.setTADDR((byte *)nameBase);
-
-
-  Mirf.payload=Payload;
-
-  Mirf.channel = 10;
-
-
-  // configure 15 retries, 500us between attempts
-  Mirf.configRegister(SETUP_RETR,(B0001<<ARD ) | (B1111<<ARC));
-
-  // Set 1MHz data rate - this increases the range slightly
-  Mirf.configRegister(RF_SETUP,0x06);
-
-  // now config the device.... 
-  Mirf.config();  
+  
+  SetupMirfClient(nameClient,nameBase);
+  
 
 
 
 #ifdef LCD_I2C
   //  inputString="BASESWCLKKStarting-i2c";
-  SendToBase("Starting-i2c");
+  SendToBase(nameClient,nameBase,"Starting-i2c");
 #else
   //  inputString="BASESWCLKKStarting-4bit";
-  SendToBase("Starting-4bit");
+  SendToBase(nameClient,nameBase,"Starting-4bit");
 #endif
 
   //SendMessage(inputString);
@@ -139,8 +119,10 @@ void setup()
 
   //  inputString="BASESWCLKKStarted";
   //  SendMessage(inputString);
-  SendToBase("Started");
+  SendToBase(nameClient,nameBase,"Started");
 
+  setup_watchdog(WDTO_1S);
+  
 
 }
 
@@ -198,12 +180,12 @@ void loop()
   if ((millis() - msRequestedForecast > msTimeout ) && (millis() - msRequestedForecast < ( msTimeout+msTimeout ) ) && (millis() - msGotForecast > msTimeout+msTimeout ) ) {
     //    updateRequested=true;
     //flagUpdate();
-    SendToBase("Timeout");
+    SendToBase(nameClient,nameBase,"Timeout");
 
     /*
     char theBuffer[Payload]="";
      ltoa(msGotForecast,theBuffer,10);
-     SendToBase(theBuffer);
+     SendToBase(nameClient,nameBase,theBuffer);
      */
 
     msRequestedForecast=millis();
@@ -234,7 +216,7 @@ void loop()
     char theMessage[Payload];
     thePayload.substring(6).toCharArray(theMessage,Payload);
 
-    //    SendToBase("Ack");
+    //    SendToBase(nameClient,nameBase,"Ack");
     for (byte a=0;a<Payload;a++) {
       if (theMessage[a]=='\r' || theMessage[a]=='\n'){
         theMessage[a]='\0';
@@ -324,7 +306,7 @@ void loop()
   delay(250);
   //  char theBuffer[Payload]="";
   //  ltoa(msTurnedOn,theBuffer,10);
-  //  SendToBase(theBuffer);
+  //  SendToBase(nameClient,nameBase,theBuffer);
 
   if (millis() - msTurnedOn > msOnTime ) {
 #ifdef LCD_CLEAR_ON_SLEEP
@@ -339,7 +321,7 @@ void loop()
   else {
     if ( ( ( millis() - msGotForecast ) > msMaxDataAge ) && ( ( millis() - msRequestedForecast ) > msTimeout ) ) {
       msRequestedForecast=millis();
-      // SendToBase("Refresh");
+      // ,"Refresh");
       requestUpdate();
       // screen is on, data is old, but let's not flagUpdate because that will keep screen on longer
 
@@ -363,7 +345,7 @@ void requestUpdate() {
   //  msRequestedForecast=millis();
   //      inputString="BASESWCLKKupdate";
   //      SendMessage(inputString);
-  SendToBase("update");
+  SendToBase(nameClient,nameBase,"update");
   //  blockForSend();
 
 }
@@ -379,67 +361,6 @@ void serialEvent() {
     if (inChar == '\n' || inChar == '\r') {
       stringComplete = true;
     } 
-  }
-}
-
-void SendToBase(String theMessage) {
-  char thePayload[Payload];
-  char theMessageChar[Payload];
-
-  Mirf.setTADDR((byte *)nameBase);
-  Mirf.setRADDR((byte *)nameClient);
-  Mirf.config();
-
-
-  strcpy(thePayload,nameClient);
-  theMessage.toCharArray(theMessageChar,Payload);
-  strcat(thePayload,theMessageChar);
-
-  Mirf.send((byte *)thePayload);
-  blockForSend();
-
-  // something changes the RADDR to nameBase... auto ack? let's change it back
-
-  Mirf.setRADDR((byte *)nameClient);
-  Mirf.config();
-
-}
-
-
-
-
-void SendMessage(String theMessage) {
-  char theTarget[6];
-  char thePayload[Payload];
-  char theSource[6];
-  theMessage.substring(0,5).toCharArray(theTarget,6);
-  theMessage.substring(5).toCharArray(thePayload,Payload);
-  //   Serial.println(inputString);
-  theMessage.substring(5,5).toCharArray(theSource,6);
-
-
-  Mirf.setTADDR((byte *)theTarget);
-  Mirf.setRADDR((byte *)nameClient);
-
-  //    Mirf.setRADDR((byte *)theSource);
-  // do we want this? malformed message could make this node unreachable 
-
-  Mirf.config();
-  Mirf.send((byte *)thePayload);
-  blockForSend();
-
-  // something changes the RADDR to nameBase... auto ack? let's change it back
-
-  Mirf.setRADDR((byte *)nameClient);
-  Mirf.config();
-
-}
-
-void blockForSend() {
-
-  while( Mirf.isSending() )
-  {
-    delay(1);
   }
 }
 
@@ -557,52 +478,16 @@ void sleeping() {
 
 }
 
+
+
 ISR(WDT_vect) {
 
-
-  // buttonPress();  
-
-
 }
 
 
 
 
-
-
-void setup_watchdog(int timerPrescaler) {
-
-  if (timerPrescaler > 9 ) timerPrescaler = 9; //Correct incoming amount if need be
-
-  byte bb = timerPrescaler & 7; 
-  if (timerPrescaler > 7) bb |= (1<<5); //Set the special 5th bit if necessary
-
-#ifdef __AVR_ATmega328P__
-  MCUSR &= ~(1<<WDRF); //Clear the watch dog reset
-  WDTCSR |= (1<<WDCE) | (1<<WDE); //Set WD_change enable, set WD enable
-  WDTCSR = bb; //Set new watchdog timeout value
-  WDTCSR |= _BV(WDIE); //Set the interrupt enable, this will keep unit from resetting after each int
-
-#elif defined __AVR_ATtiny85__
-
-  // attiny
-
-  //This order of commands is important and cannot be combined
-  MCUSR &= ~(1<<WDRF); //Clear the watch dog reset
-  WDTCR |= (1<<WDCE) | (1<<WDE); //Set WD_change enable, set WD enable
-  WDTCR = bb; //Set new watchdog timeout value
-  WDTCR |= _BV(WDIE); //Set the interrupt enable, this will keep unit from resetting after each int
-
-#else 
-  //??
-#error "I don't know how to handle your AVR in setup_watchdog"
-#endif
-
-
-}
-
-
-
+ 
 
 
 
