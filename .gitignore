@@ -45,3 +45,5 @@ Thumbs.db
 .DS_Store
 
 pi-commands/.DS_Store
+
+arduino-clients/.DS_Store
