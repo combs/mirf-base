@@ -50,13 +50,15 @@ void SetupMirfClient(char nameClient[6], char nameBase[6] ) {
 
 
 void SendToBase(char nameClient[6], char nameBase[6] , String theMessage) {
+
+  Mirf.powerUpTx();
+  
   char thePayload[Payload];
   char theMessageChar[Payload];
 
   Mirf.setTADDR((byte *)nameBase);
   Mirf.setRADDR((byte *)nameClient);
   Mirf.config();
-
 
   strcpy(thePayload,nameClient);
   theMessage.toCharArray(theMessageChar,Payload);
@@ -76,9 +78,13 @@ void SendToBase(char nameClient[6], char nameBase[6] , String theMessage) {
 
 
 void SendMessage(char nameClient[6], char nameBase[6] , String theMessage) {
+
+  Mirf.powerUpTx();
+
   char theTarget[6];
   char thePayload[Payload];
   char theSource[6];
+
   theMessage.substring(0,5).toCharArray(theTarget,6);
   theMessage.substring(5).toCharArray(thePayload,Payload);
   //   Serial.println(inputString);
