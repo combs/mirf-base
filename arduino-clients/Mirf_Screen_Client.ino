@@ -14,7 +14,6 @@ void setup();
 // #include <LiquidCrystal_I2C.h>
 
 #include <LiquidCrystal.h>
-
 #include "mirfscreenconfig.h"
 
 //#define LCD_I2C
@@ -26,20 +25,19 @@ void setup();
 #define MIRF_PINS_PCB
 
 
+
+
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 volatile byte updateRequested = true;
 volatile byte paintRequested = true;
-volatile long msTurnedOn = 0;
 
+volatile long secondsSinceStartup = 0;
+volatile long secondsGotForecast = 0;
+volatile long secondsRequestedForecast = 0;
+volatile long secondsTurnedOn = 0;
 
-
-// const long msScreenUpdateInterval=1000;
-
-long msScreenUpdated=0;
-
-volatile long msGotForecast = 0;
-volatile long msRequestedForecast = 0;
+ 
 // const byte Payload = 32;
 char stringForecast0[Payload];
 char stringForecast1[Payload];
@@ -59,13 +57,12 @@ LiquidCrystal lcd(7, 6, A3, A2, A1, A0);
 
 
 
-
-
 void setup()
 {
 
   wdt_disable();
   power_adc_disable();
+  power_usart0_disable();
 
   pinMode(2,INPUT);
 
@@ -79,9 +76,9 @@ void setup()
   delay(2);
   lcd.clear();
   lcd.print("Starting radio..");
-  
+
   SetupMirfClient(nameClient,nameBase);
-  
+
 
 
 
@@ -113,6 +110,7 @@ void setup()
     lcd.print(status);
   }
 
+  setup_watchdog(WDTO_1S);
 
   attachInterrupt(0,flagUpdate,RISING);
   flagUpdate();
@@ -120,10 +118,9 @@ void setup()
   //  inputString="BASESWCLKKStarted";
   //  SendMessage(inputString);
   SendToBase(nameClient,nameBase,"Started");
-
-  setup_watchdog(WDTO_1S);
+  delay(1000); // Avoid message-spamming race condition at startup
   
-
+  
 }
 
 void myLCDClear() {
@@ -134,12 +131,12 @@ void myLCDClear() {
   lcd.write("                ");
   lcd.home();
 }
+
 void flagUpdate() {
+
   updateRequested=true;
-  msTurnedOn=millis();
-  //  backlight();
-  //  lcd.on();
-  //  paintScreen();
+  secondsTurnedOn=secondsSinceStartup;
+
   paintRequested=true;
 
 }
@@ -148,167 +145,17 @@ void flagUpdate() {
 void loop()
 {
 
-  waking();
-
+  //  waking();
 
   if (paintRequested==true) {
     display();
     backlight();
     paintScreen();
-    paintRequested=false;  
-    //    inputString="BASESWCLKKpainting";
-    //    SendMessage(inputString);
-  }
-
-  byte data[Payload];
-
-  if (updateRequested==true) {
-
-    updateRequested=false;
-    if ( ( millis() - msGotForecast > msMaxDataAge ) || msGotForecast==0) {
-      msRequestedForecast=millis();
-      requestUpdate();
-
-
-    } 
-    else {
-      // paintScreen();
-
-    }
-
-  }
-  if ((millis() - msRequestedForecast > msTimeout ) && (millis() - msRequestedForecast < ( msTimeout+msTimeout ) ) && (millis() - msGotForecast > msTimeout+msTimeout ) ) {
-    //    updateRequested=true;
-    //flagUpdate();
-    SendToBase(nameClient,nameBase,"Timeout");
-
-    /*
-    char theBuffer[Payload]="";
-     ltoa(msGotForecast,theBuffer,10);
-     SendToBase(nameClient,nameBase,theBuffer);
-     */
-
-    msRequestedForecast=millis();
-    requestUpdate();
-
-    //timeout
-  }
-
-  // is there any data pending? 
-  if( Mirf.dataReady() )
-  {
-
-    // if (millis() - msRequestedForecast < msTimeout) {
-    // msGotForecast = millis();
-    // We don't want to cache unrelated status updates from the base station
-    // - if a message is received that was not recently requested, do not update receive time
-
-    //}
-
-#ifdef LCD_UPDATES_EXTEND_ON_TIME
-    msTurnedOn=millis();
-#endif
-    // lcd.noCursor();
-    lcd.noBlink();
-    Mirf.getData((byte *) &data);
-    String thePayload=String((char *)data);
-    char theLine=thePayload[5];
-    char theMessage[Payload];
-    thePayload.substring(6).toCharArray(theMessage,Payload);
-
-    //    SendToBase(nameClient,nameBase,"Ack");
-    for (byte a=0;a<Payload;a++) {
-      if (theMessage[a]=='\r' || theMessage[a]=='\n'){
-        theMessage[a]='\0';
-        // Look for linebreaks and swap them out for end-of-string
-      }
-    }
-    byte x=0;
-    byte y=0;
-    byte length=strlen(theMessage);
-    switch (theLine) {
-    case '0': // first line full
-      msGotForecast = millis();
-      strcpy(stringForecast0,theMessage);
-      x=0;
-      y=0;
-      length=16;
-      break;
-
-    case '1': // second line full
-      msGotForecast = millis();
-      strcpy(stringForecast1,theMessage);
-      x=0;
-      y=1;
-      length=16;
-      break;
-    case 'C': // current Conditions
-      msGotForecast = millis();
-      strcpy(stringForecastConditions,theMessage);
-      x=0;
-      y=1;
-      break;
-    case 'N': // temp Now
-      msGotForecast = millis();
-      strcpy(stringForecastNow,theMessage);
-      x=0;
-      y=0;
-      break;
-    case 'L':  // temp Later
-      msGotForecast = millis();
-      strcpy(stringForecastLater,theMessage);
-      x=16-strlen(stringForecastLater);
-      y=0;
-      break;
-    case 'A':  // Ack request; don't print anything
-      x=30;
-      y=4;
-      length=0;
-      theMessage[0]='\0';
-      msRequestedForecast=millis();
-      break;
-    case 'u':
-    case 'r':
-    case 's':
-      x=0;
-      y=1;
-      thePayload="Radio crosstalk";
-      thePayload.toCharArray(theMessage,Payload);
-      length=strlen(theMessage);
-      break;
-    default:
-      break;
-    }
-
-    lcd.setCursor(x,y);
-
-
-    for (int a=0;a<length;a++){
-      lcd.write(" ");
-    }
-
-    //    lcd.write("                ");
-
-    lcd.setCursor(x,y);
-    //    lcd.write(theLine);
-    lcd.print( theMessage);
-
-
-    //        thePayload.substring(5,1).toCharArray(theFrom,6);
-
-    // ... and write it out to the PC
-    //   Serial.println((char *) data);
+    paintRequested=false;
   }
 
 
-
-
-  delay(250);
-  //  char theBuffer[Payload]="";
-  //  ltoa(msTurnedOn,theBuffer,10);
-  //  SendToBase(nameClient,nameBase,theBuffer);
-
-  if (millis() - msTurnedOn > msOnTime ) {
+  if (secondsSinceStartup - secondsTurnedOn > secondsScreenAwakeTime ) {
 #ifdef LCD_CLEAR_ON_SLEEP
     myLCDClear();
 #endif
@@ -318,9 +165,14 @@ void loop()
     sleeping();
 
   } 
+
   else {
-    if ( ( ( millis() - msGotForecast ) > msMaxDataAge ) && ( ( millis() - msRequestedForecast ) > msTimeout ) ) {
-      msRequestedForecast=millis();
+
+    Mirf.powerUpRx();
+
+    if ( ( ( secondsSinceStartup - secondsGotForecast ) > secondsMaxDataAge ) && 
+    ( ( secondsSinceStartup - secondsRequestedForecast ) > secondsTimeout ) ) {
+      secondsRequestedForecast=secondsSinceStartup;
       // ,"Refresh");
       requestUpdate();
       // screen is on, data is old, but let's not flagUpdate because that will keep screen on longer
@@ -332,21 +184,135 @@ void loop()
 
     //    paintScreen();
 
+    byte data[Payload];
+
+    if (updateRequested==true) {
+
+      updateRequested=false;
+
+      if  ( ( ( secondsSinceStartup - secondsRequestedForecast > 
+      secondsTimeout+secondsTimeout ) || 
+      (secondsGotForecast==0 && secondsRequestedForecast==0))  &&  
+      ( ( secondsSinceStartup - secondsGotForecast > secondsMaxDataAge ) || 
+      secondsGotForecast==0)) {
+        
+        secondsRequestedForecast=secondsSinceStartup;
+        requestUpdate();
+
+      } 
+
+    }
+    if ((secondsSinceStartup - secondsRequestedForecast > secondsTimeout ) && (secondsSinceStartup - secondsRequestedForecast < ( secondsTimeout+secondsTimeout ) ) && (secondsSinceStartup - secondsGotForecast > secondsTimeout+secondsTimeout ) ) {
+
+      SendToBase(nameClient,nameBase,"Timeout");
+      secondsRequestedForecast=secondsSinceStartup;
+      requestUpdate();
+
+    }
+
+    // is there any data pending? 
+    if( Mirf.dataReady() )
+    {
+
+#ifdef LCD_UPDATES_EXTEND_ON_TIME
+      secondsTurnedOn=secondsSinceStartup;
+#endif
+
+      lcd.noBlink();
+      Mirf.getData((byte *) &data);
+      String thePayload=String((char *)data);
+      char theLine=thePayload[5];
+      char theMessage[Payload];
+      thePayload.substring(6).toCharArray(theMessage,Payload);
+
+      for (byte a=0;a<Payload;a++) {
+        if (theMessage[a]=='\r' || theMessage[a]=='\n'){
+          theMessage[a]='\0';
+        }
+      }
+      byte x=0;
+      byte y=0;
+      byte length=strlen(theMessage);
+      switch (theLine) {
+      case '0': // first line full
+        secondsGotForecast = secondsSinceStartup;
+        strcpy(stringForecast0,theMessage);
+        x=0;
+        y=0;
+        length=16;
+        break;
+
+      case '1': // second line full
+        secondsGotForecast = secondsSinceStartup;
+        strcpy(stringForecast1,theMessage);
+        x=0;
+        y=1;
+        length=16;
+        break;
+      case 'C': // current Conditions
+        secondsGotForecast = secondsSinceStartup;
+        strcpy(stringForecastConditions,theMessage);
+        x=0;
+        y=1;
+        break;
+      case 'N': // temp Now
+        secondsGotForecast = secondsSinceStartup;
+        strcpy(stringForecastNow,theMessage);
+        x=0;
+        y=0;
+        break;
+      case 'L':  // temp Later
+        secondsGotForecast = secondsSinceStartup;
+        strcpy(stringForecastLater,theMessage);
+        x=16-strlen(stringForecastLater);
+        y=0;
+        break;
+      case 'A':  // Ack request; don't print anything
+        x=30;
+        y=4;
+        length=0;
+        theMessage[0]='\0';
+        secondsRequestedForecast=secondsSinceStartup;
+        break;
+      case 'u':
+      case 'r':
+      case 's':
+        x=0;
+        y=1;
+        thePayload="Radio crosstalk";
+        thePayload.toCharArray(theMessage,Payload);
+        length=strlen(theMessage);
+        break;
+      default:
+        break;
+      }
+
+      lcd.setCursor(x,y);
+
+
+      for (int a=0;a<length;a++){
+        lcd.write(" ");
+      }
+
+
+      lcd.setCursor(x,y);
+
+      lcd.print( theMessage);
+
+    }
   }
-
-
-
+  
+  
+  napping();
+  
+  
 }
 
 void requestUpdate() {
 
   lcd.setCursor(strlen(stringForecastNow),0);
   lcd.blink();
-  //  msRequestedForecast=millis();
-  //      inputString="BASESWCLKKupdate";
-  //      SendMessage(inputString);
   SendToBase(nameClient,nameBase,"update");
-  //  blockForSend();
 
 }
 
@@ -368,7 +334,7 @@ void serialEvent() {
 void paintScreen() {
 #ifdef LCD_CLEAR_ON_SLEEP
 
-  if (millis() - msGotForecast > msMaxDataAge) {
+  if (secondsSinceStartup - secondsGotForecast > secondsMaxDataAge) {
     myLCDClear();
     return;
   }
@@ -378,7 +344,6 @@ void paintScreen() {
   if (strlen(stringForecastNow) > 1) {
     myLCDClear();
     lcd.print( stringForecastNow);
-    //    lcd.print(strlen(stringForecastNow));
     lcd.setCursor(16-(strlen(stringForecastLater)),0);
     lcd.print( stringForecastLater);
   } 
@@ -453,17 +418,17 @@ void noBacklight() {
 
 void waking() {
 
-  //  setup_watchdog( 	WDTO_500MS ); //Setup watchdog to go off after 500ms
+  // do this only if... ?
 
-  wdt_reset();
+//  Mirf.powerUpRx(); 
+
+
 
 }
 
 void sleeping() {
 
-
-  // setup_watchdog( 	WDTO_8S ); //Setup watchdog to go off after 500ms
-  set_sleep_mode(SLEEP_MODE_IDLE);
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
 
   Mirf.powerDown(); 
@@ -472,22 +437,45 @@ void sleeping() {
   sleep_cpu();
   sleep_disable();
   waking();
-  Mirf.powerUpRx(); 
-  wdt_disable();
-
 
 }
 
 
+
+void napping() {
+
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
+ 
+  sleep_enable();
+  sei();
+  sleep_cpu();
+  sleep_disable();
+  waking();
+
+}
 
 ISR(WDT_vect) {
 
+  if (secondsSinceStartup + 1 < secondsSinceStartup) {
+    secondsTurnedOn = 0; 
+    secondsGotForecast = 0;
+    secondsRequestedForecast = 0;
+  }
+
+  secondsSinceStartup++;
+
 }
 
 
 
 
- 
+
+
+
+
+
+
 
 
 
