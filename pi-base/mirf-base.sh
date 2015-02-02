@@ -123,7 +123,7 @@ while read TO FROM DATA DETAILS; do
 			
 			for FILE in `find /var/local/nrf24/out -maxdepth 1 -type f`
 				do
-				cat "$FILE" && cat "$FILE" >&3 && rm "$FILE" && sleep 0.5
+				cat "$FILE" && cat "$FILE" >&3 && rm "$FILE" && sleep 0.2
 				done
 		fi
 		if [ `find /var/local/nrf24/out -maxdepth 2 -mindepth 2 -type f | grep -c '$'` -gt 0 ] 
@@ -131,7 +131,7 @@ while read TO FROM DATA DETAILS; do
 			
 			for FILE in `find /var/local/nrf24/out -maxdepth 2 -mindepth 2 -type f`
 				do
-				cat "$FILE" && echo -n "`dirname $FILE | sed s:.*/::`BASES" >&3 && cat "$FILE" >&3 && rm "$FILE" && sleep 0.5
+				cat "$FILE" && echo -n "`dirname $FILE | sed s:.*/::`BASES" >&3 && cat "$FILE" >&3 && rm "$FILE" && sleep 0.2
 				done
 		fi
 	fi
@@ -144,7 +144,7 @@ done <&3 || INITIALIZED=false && echo "Error contacting base station. Message tr
 # look for things to send
 
 
-sleep 0.25
+sleep 0.1
 exec 3>&-
 
 
