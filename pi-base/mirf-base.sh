@@ -108,7 +108,7 @@ while read TO FROM DATA DETAILS; do
 			if [ "$WRITE" = "true" ]
 			then
 				echo  "From $FROM to $TO, I got $DATA"
-				mkdir -p $BASE/in/`date +%Y-%m-%d`/$FROM/ && echo "$DATA $DETAILS" > "$BASE/in/`date +%Y-%m-%d`/$FROM/`date +%s`"
+				mkdir -p $BASE/in/`date +%Y-%m-%d`/$FROM/ && echo "$DATA $DETAILS" > "$BASE/in/`date +%Y-%m-%d`/$FROM/`date +%s.%N`"
 				
 			fi
 		
