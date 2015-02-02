@@ -16,14 +16,6 @@ void setup();
 #include <LiquidCrystal.h>
 #include "mirfscreenconfig.h"
 
-//#define LCD_I2C
-#define LCD_PCB
-
-#define LCD_BACKLIGHT_PIN 10
-
-// #define MIRF_PINS_STANDARD
-#define MIRF_PINS_PCB
-
 
 
 

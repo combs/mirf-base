@@ -17,10 +17,12 @@ void SetupMirfClient(char nameClient[6], char nameBase[6] ) {
 	
 	
   Mirf.spi = &MirfHardwareSpi;
+
 #ifdef MIRF_PINS_PCB
   Mirf.cePin=8;
   Mirf.csnPin=9;
 #endif
+
   Mirf.init();
 
   // name the receiving channel - must match tranmitter setting!
