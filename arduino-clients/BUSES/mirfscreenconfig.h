@@ -1,4 +1,6 @@
 
+// These are default values that will be overruled by EEPROM.
+
 char nameBase[6] = "BASES";
 
 char nameClient[6] = "BUSES";

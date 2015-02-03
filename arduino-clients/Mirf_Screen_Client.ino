@@ -20,6 +20,7 @@ void setup();
 
 
 
+
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 volatile byte updateRequested = true;
@@ -476,8 +477,6 @@ ISR(WDT_vect) {
   secondsSinceStartup++;
 
 }
-
-
 
 
 
