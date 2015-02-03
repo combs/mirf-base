@@ -21,7 +21,7 @@ while read TO FROM DATA DETAILS; do
  			echo  "From $FROM to $TO, I got '$DATA' '$DETAILS'"
 	fi
 		
-	 if [ "$FROM" != "" ] 
+	if [ "$FROM" != "" ] 
 		then
 			
 			WRITE=false
@@ -123,7 +123,7 @@ while read TO FROM DATA DETAILS; do
 			
 			for FILE in `find /var/local/nrf24/out -maxdepth 1 -type f`
 				do
-				cat "$FILE" && cat "$FILE" >&3 && rm "$FILE" && sleep 0.2
+				cat "$FILE" && cat "$FILE" >&3 && rm "$FILE" && sleep 0.02
 				done
 		fi
 		if [ `find /var/local/nrf24/out -maxdepth 2 -mindepth 2 -type f | grep -c '$'` -gt 0 ] 
@@ -131,9 +131,11 @@ while read TO FROM DATA DETAILS; do
 			
 			for FILE in `find /var/local/nrf24/out -maxdepth 2 -mindepth 2 -type f`
 				do
-				cat "$FILE" && echo -n "`dirname $FILE | sed s:.*/::`BASES" >&3 && cat "$FILE" >&3 && rm "$FILE" && sleep 0.2
+				cat "$FILE" && echo -n "`dirname $FILE | sed s:.*/::`BASES" >&3 && cat "$FILE" >&3 && rm "$FILE" && sleep 0.02
 				done
 		fi
+	else 
+		echo "Not checking for messages... isn't running."
 	fi
 	
 	# sleep 0.25
