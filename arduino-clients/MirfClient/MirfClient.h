@@ -3,17 +3,24 @@
 #include <Mirf.h>
 #include <Wire.h>
 #include <MirfHardwareSpiDriver.h>
+#include <EEPROM.h>
 
 
 void blockForSend();
-void SendToBase(char nameClient[6], char nameBase[6] , String theMessage);
-void SendMessage(char nameClient[6], char nameBase[6] , String theMessage);
+void SendToBase(String theMessage);
+void SendMessage(String theMessage);
 
 
 const byte Payload = 32;
+const int addressEEPROM=900;
 
 
-void SetupMirfClient(char nameClient[6], char nameBase[6] ) {
+
+// Is this file yacking about NameClient and NameBase? 
+// Include mirfscreenconfig.h or define them before including this
+
+
+void SetupMirfClient() {
 	
 	
   Mirf.spi = &MirfHardwareSpi;
@@ -50,8 +57,24 @@ void SetupMirfClient(char nameClient[6], char nameBase[6] ) {
 
 
 
+byte txFifoEmpty() {
+	uint8_t fifoStatus;
+	readRegister(FIFO_STATUS, &fifoStatus, sizeof(fifoStatus));
+	return (fifoStatus & _BV(TX_EMPTY));
 
-void SendToBase(char nameClient[6], char nameBase[6] , String theMessage) {
+}
+
+byte txFifoFull() {
+	uint8_t fifoStatus;
+	readRegister(FIFO_STATUS, &fifoStatus, sizeof(fifoStatus));
+	// return (fifoStatus & _BV(TX_FULL));
+	return fifoStatus;
+}
+
+
+
+
+void SendToBase(String theMessage) {
 
 //  Mirf.powerUpTx();
   
@@ -82,7 +105,7 @@ void SendToBase(char nameClient[6], char nameBase[6] , String theMessage) {
 
 
 
-void SendMessage(char nameClient[6], char nameBase[6] , String theMessage) {
+void SendMessage(String theMessage) {
 
 //  Mirf.powerUpTx();
 
@@ -115,6 +138,60 @@ void SendMessage(char nameClient[6], char nameBase[6] , String theMessage) {
   
 }
 
+void getNameClient () {
+	char nameDefault[6]="FRESH";
+	for (int a=0;a<5;a++) {
+		byte thisByte=EEPROM.read(900+a);
+		if (thisByte<168 && thisByte>31) {
+			nameClient[a]=thisByte;
+		} else {
+			strcpy(nameClient,nameDefault);
+			break;
+		}
+	}	
+}
+
+void getNameBase() {
+	char nameDefault[6]="BASES";
+	for (int a=0;a<5;a++) {
+		byte thisByte=EEPROM.read(905+a);
+		if (thisByte<168 && thisByte>31) {
+			nameBase[a]=thisByte;
+		} else {
+			strcpy(nameBase,nameDefault);
+			break;
+		}
+	}
+}
+byte setNameClient(char nameNew[6]) {
+	for (int a=0;a<5;a++) {
+		if (nameNew[a]<168 && nameNew[a]>31) {
+		} else {
+			return false;
+		}
+	}	
+	for (int a=0;a<5;a++) {
+		EEPROM.write(900+a,nameNew[a]);
+	}	
+	strcpy(nameClient,nameNew);
+	
+	return true;
+}
+byte setNameBase(char nameNew[6]) {
+	for (int a=0;a<5;a++) {
+		if (nameNew[a]<168 && nameNew[a]>31) {
+		} else {
+			return false;
+		}
+	}	
+	for (int a=0;a<5;a++) {
+		EEPROM.write(900+a,nameNew[a]);
+	}	
+	strcpy(nameBase,nameNew);
+	
+	return true;
+}
+
 void blockForSend() {
 
   while( Mirf.isSending() )
@@ -122,6 +199,39 @@ void blockForSend() {
     delay(1);
   }
 }
+
+void HandleBuiltinMessage(char *thePayload) {
+	char theCommand=thePayload[0];
+	char theMessage[Payload];
+	char theName[6];
+	
+	for (byte a=1;a<Payload;a++) {
+        if (thePayload[a]=='\0' ) {
+        	theMessage[a-1]='\0';
+        	break;
+        }
+		theMessage[a-1]=thePayload[a];
+     }
+	switch (theCommand) {
+		case 'B':
+			strcpy(theName,theMessage);
+			setNameBase(theName);
+			SendToBase("Name-saved");
+			break;
+		case 'C':
+			strcpy(theName,theMessage);
+			setNameClient(theName);
+			SendToBase("Name-saved");
+			break;
+		default:
+			SendToBase("Unrecognized");
+		break;
+			
+	}
+	
+	
+}
+
 
 
 

@@ -6,15 +6,16 @@
 #include <avr/sleep.h>
 #include <avr/power.h>
 #include "watchdog.h"
-#include "MirfClient.h"
-
+#include "mirfscreenconfig.h" // include this before MirfClient.h
+#include "MirfClient.h" // include this after mirfscreenconfig.h
+#include <EEPROM.h>
 
 void setup();
 
 // #include <LiquidCrystal_I2C.h>
 
 #include <LiquidCrystal.h>
-#include "mirfscreenconfig.h"
+
 
 
 
@@ -51,11 +52,14 @@ LiquidCrystal lcd(7, 6, A3, A2, A1, A0);
 
 void setup()
 {
-
+  
   wdt_disable();
   power_adc_disable();
   power_usart0_disable();
 
+  getNameClient();
+  getNameBase();
+  
   pinMode(2,INPUT);
 
   //  Serial.begin(115200);
@@ -68,18 +72,18 @@ void setup()
   delay(2);
   lcd.clear();
   lcd.print("Starting radio..");
-
-  SetupMirfClient(nameClient,nameBase);
-
+  
+  SetupMirfClient();
+  
 
 
 
 #ifdef LCD_I2C
   //  inputString="BASESWCLKKStarting-i2c";
-  SendToBase(nameClient,nameBase,"Starting-i2c");
+  SendToBase("Starting-i2c");
 #else
   //  inputString="BASESWCLKKStarting-4bit";
-  SendToBase(nameClient,nameBase,"Starting-4bit");
+  SendToBase("Starting-4bit");
 #endif
 
   //SendMessage(inputString);
@@ -109,7 +113,7 @@ void setup()
 
   //  inputString="BASESWCLKKStarted";
   //  SendMessage(inputString);
-  SendToBase(nameClient,nameBase,"Started");
+  SendToBase("Started");
   delay(1000); // Avoid message-spamming race condition at startup
   
   
@@ -196,7 +200,7 @@ void loop()
     }
     if ((secondsSinceStartup - secondsRequestedForecast > secondsTimeout ) && (secondsSinceStartup - secondsRequestedForecast < ( secondsTimeout+secondsTimeout ) ) && (secondsSinceStartup - secondsGotForecast > secondsTimeout+secondsTimeout ) ) {
 
-      SendToBase(nameClient,nameBase,"Timeout");
+      SendToBase("Timeout");
       secondsRequestedForecast=secondsSinceStartup;
       requestUpdate();
 
@@ -226,6 +230,19 @@ void loop()
       byte y=0;
       byte length=strlen(theMessage);
       switch (theLine) {
+        
+      case '$':
+        myLCDClear();
+        lcd.print("System update...");
+        lcd.setCursor(0,1);
+        lcd.print(theMessage);
+        HandleBuiltinMessage(theMessage);
+        delay(500);
+        length=0;
+        theMessage[0]='\0';
+
+        break;
+        
       case '0': // first line full
         secondsGotForecast = secondsSinceStartup;
         strcpy(stringForecast0,theMessage);
@@ -275,6 +292,7 @@ void loop()
         thePayload.toCharArray(theMessage,Payload);
         length=strlen(theMessage);
         break;
+        
       default:
         break;
       }
@@ -304,7 +322,7 @@ void requestUpdate() {
 
   lcd.setCursor(strlen(stringForecastNow),0);
   lcd.blink();
-  SendToBase(nameClient,nameBase,"update");
+  SendToBase("update");
 
 }
 
@@ -458,6 +476,8 @@ ISR(WDT_vect) {
   secondsSinceStartup++;
 
 }
+
+
 
 
 
