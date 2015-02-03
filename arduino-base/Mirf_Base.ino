@@ -6,9 +6,8 @@
 
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
-byte iterator=0;
 
-long msUpdateInterval=100;
+long msUpdateInterval=500;
 long msLastUpdate=0;
 
 
@@ -28,8 +27,8 @@ void setup()
   Mirf.payload=32; 
   
   Mirf.channel = 10;
-  // configure 15 retries, 500us between attempts
-  Mirf.configRegister(SETUP_RETR,(B0001<<ARD ) | (B1111<<ARC));
+  // configure 15 retries, 250us between attempts
+  Mirf.configRegister(SETUP_RETR,(B0000<<ARD ) | (B1111<<ARC));
 
 
 
@@ -45,17 +44,11 @@ void setup()
 
   Mirf.config();
   Mirf.send((byte *)"BASES0Base station");
-  while( Mirf.isSending() )
-  {
-    delay(1);
-  }
+  blockForSend();
   Mirf.config();
   delay(100);
   Mirf.send((byte *)"BASES1initialized");
-  while( Mirf.isSending() )
-  {
-    delay(1);
-  }
+  blockForSend();
   delay(1000);
   Serial.print("BASES BASES Booted ");
   Serial.println(Mirf.getStatus());
@@ -63,8 +56,7 @@ void setup()
 }
 
 void loop()
-{
-  blockForSend();
+{ 
     
   if (millis() - msLastUpdate > msUpdateInterval ) {
     msLastUpdate=millis();
@@ -99,8 +91,25 @@ void loop()
     Serial.print(" ");
     Serial.println(theMessage);
     Serial.flush();
+    msLastUpdate=millis();
+  }
+  
+  
+  while (Serial.available() > 0) {
+    // get the new byte:
+    char inChar = (char)Serial.read(); 
+    // add it to the inputString:
+    // if the incoming character is a newline, set a flag
+    // so the main loop can do something about it:
+    if (inChar == '\n' || inChar == '\r') {
+      stringComplete = true;
+      break;
+    } else {
+      inputString += inChar;
+    }
     
   }
+  
   if (stringComplete==true) {
     
     if (inputString.length()>9){ 
@@ -108,56 +117,38 @@ void loop()
       char theMessage[Mirf.payload];
       inputString.substring(0,5).toCharArray(theTarget,6);
       inputString.substring(5).toCharArray(theMessage,Mirf.payload);
-      
-  
-  
       Mirf.setTADDR((byte *)theTarget);
       Mirf.setRADDR((byte *)"BASES");
       Mirf.config();
       Mirf.send((byte *)theMessage);
       blockForSend();
-  
+      Mirf.setRADDR((byte *)"BASES");
+      Mirf.config(); 
       Serial.print("BASES BASES Message_sent_to ");
       Serial.println(theTarget);
       Serial.flush();
+      msLastUpdate=millis();
     }
-    
-    
+
     stringComplete=false;
     inputString="";
-    
-
 
   }
   
   
-  
-  // Serial.println(Mirf.getStatus());
+// The TX_EMPTY register doesn't seem to get set properly    
+//  if (Mirf.txFifoEmpty() || Mirf.txFifoFull() ) {
+    blockForSend();
+
+       
+}
  
-}
-
-
-void serialEvent() {
-  while (Serial.available()) {
-    // get the new byte:
-    char inChar = (char)Serial.read(); 
-    // add it to the inputString:
-    inputString += inChar;
-    // if the incoming character is a newline, set a flag
-    // so the main loop can do something about it:
-    if (inChar == '\n' || inChar == '\r') {
-      stringComplete = true;
-      break;
-    } 
-  }
-}
-
 
 void blockForSend() {
 
   while( Mirf.isSending() )
   {
-    delay(1);
+    delayMicroseconds(100);
   }
 }
 
