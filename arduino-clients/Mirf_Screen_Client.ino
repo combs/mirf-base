@@ -208,7 +208,7 @@ void loop()
     }
 
     // is there any data pending? 
-    if( Mirf.dataReady() )
+    if( !Mirf.isSending() && Mirf.dataReady() )
     {
 
 #ifdef LCD_UPDATES_EXTEND_ON_TIME
