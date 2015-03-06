@@ -139,8 +139,6 @@ void loop()
   }
 
 
-  blockForSend();
-  
 
 
 }
