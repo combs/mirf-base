@@ -172,7 +172,7 @@ void blockForSend() {
 
   while( Mirf.isSending() )
   {
-    delay(1);
+    delayMicroseconds(100);
   }
  
   // something changes the RADDR to nameBase... auto ack? let's change it back
