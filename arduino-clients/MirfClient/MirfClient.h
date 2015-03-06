@@ -162,6 +162,7 @@ byte setNameBase(char nameNew[6]) {
 	}	
 	for (int a=0;a<5;a++) {
 		EEPROM.write(900+a,nameNew[a]);
+		EEPROM.write(905+a,nameNew[a]);
 	}	
 	strcpy(nameBase,nameNew);
 	
@@ -204,12 +205,11 @@ void HandleBuiltinMessage(char *thePayload) {
 		case 'C':
 			strcpy(theName,theMessage);
 			setNameClient(theName);
-			SendToBase("Name-saved");
+			SendToBase("Name-saved"); 
 			break;
 		default:
 			SendToBase("Unrecognized");
 		break;
-			
 	}
 	
 	
