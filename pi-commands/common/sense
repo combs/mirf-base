@@ -19,15 +19,17 @@ cd `dirname $0`
 		do		
 			if [ "$CLIENT" != "" ] 
 				then	
+				
 				if [ -x "../$CLIENT/zone-sense" ]
 					then
-					../$CLIENT/zone-sense $FROM $DETAILS
+					../$CLIENT/zone-sense $FROM $DETAILS & 
 				elif [ -x "../$CLIENT/update" ]
 					then
-					../$CLIENT/update $FROM $DETAILS
+					../$CLIENT/update $FROM $DETAILS & 
 				fi
 			fi
 		done
+		
 		rm $TEMP
 
 	fi
