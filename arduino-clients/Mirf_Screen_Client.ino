@@ -323,7 +323,7 @@ void requestUpdate() {
 
   lcd.setCursor(strlen(stringForecastNow),0);
   lcd.blink();
-  SendToBase("update");
+  SendToBase("sense");
 
 }
 
