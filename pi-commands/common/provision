@@ -2,9 +2,9 @@
 cd `dirname $0`
 . ../common/get-directories
 
-echo "FRESHBASES\$BBASES" > $BASE/out/provision1
-sleep 1
 echo "FRESHBASES\$C$FROM" > $BASE/out/provision2
+sleep 1
+echo "FRESHBASES\$BBASES" > $BASE/out/provision1
 
 
 wait
