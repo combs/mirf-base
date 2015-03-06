@@ -78,12 +78,7 @@ void SendToBase(String theMessage) {
 
   Mirf.send((byte *)thePayload);
   blockForSend();
-
-  // something changes the RADDR to nameBase... auto ack? let's change it back
-
-  Mirf.setRADDR((byte *)nameClient);
-  Mirf.config();
-  Mirf.powerUpRx();
+ 
   
 }
 
@@ -115,11 +110,7 @@ void SendMessage(String theMessage) {
   Mirf.send((byte *)thePayload);
   blockForSend();
 
-  // something changes the RADDR to nameBase... auto ack? let's change it back
 
-  Mirf.setRADDR((byte *)nameClient);
-  Mirf.config();
-  Mirf.powerUpRx();
   
 }
 
@@ -183,6 +174,13 @@ void blockForSend() {
   {
     delay(1);
   }
+ 
+  // something changes the RADDR to nameBase... auto ack? let's change it back
+
+  Mirf.setRADDR((byte *)nameClient);
+  Mirf.config();
+  Mirf.powerUpRx();
+  
 }
 
 void HandleBuiltinMessage(char *thePayload) {
