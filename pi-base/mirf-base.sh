@@ -6,7 +6,14 @@ BASE=/var/local/nrf24
 while sleep 2; do
 SERIAL=`ls -t /dev/tty.usb* /dev/ttyA* 2>/dev/null| grep -v ttyAMA0 | head -1`
 echo "using $SERIAL" 
-stty -F $SERIAL cs8 115200 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts >/dev/null
+if [ `uname` != "Darwin" ]
+then
+
+	stty -F $SERIAL cs8 115200 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts >/dev/null
+else 
+	stty -f $SERIAL cs8 115200 ignbrk -brkint   -echo -echoe -echok -echoctl >/dev/null
+
+fi
  
 exec 3<> $SERIAL 
 sleep 1
