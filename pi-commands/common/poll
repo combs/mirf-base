@@ -51,6 +51,9 @@ if [ "$SEEN" != "false" ]
 			../$FROM/update $FROM $DETAILS & 
 		fi	
 	fi
+else 
+	echo "$FROMBASESSleep"
+	
 fi
 
 wait
