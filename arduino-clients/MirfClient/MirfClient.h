@@ -161,7 +161,6 @@ byte setNameBase(char nameNew[6]) {
 		}
 	}	
 	for (int a=0;a<5;a++) {
-		EEPROM.write(900+a,nameNew[a]);
 		EEPROM.write(905+a,nameNew[a]);
 	}	
 	strcpy(nameBase,nameNew);
