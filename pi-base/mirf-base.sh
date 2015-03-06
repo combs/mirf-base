@@ -15,6 +15,8 @@ sleep 1
 while read TO FROM DATA DETAILS; do
 	DATA=`echo $DATA|tr '\r' ' '|sed -e 's:[ \t]*$::'`
 	DETAILS=`echo $DETAILS|tr '\r' ' '|sed -e 's:[ \t]*$::'`
+ 	WRITE=false
+ 	HANDLED=false
  	
  	if [ -e /tmp/mirf-debug ]
  		then
@@ -23,9 +25,51 @@ while read TO FROM DATA DETAILS; do
 		
 	if [ "$FROM" != "" ] 
 		then
+			 
+			case "$FROM" in
+				BASES)
+					case "$TO" in
+						BASES)
+						case "$DATA" in
+							UPDATE*)
+							#	echo "Update requested"
+								# do stuff;
+								# echo -ne "."
+								HANDLED=true
+							;;
+							Message_sent_to*)
+								echo "Message successfully sent to $DETAILS."
+								HANDLED=true
+								;;
+							Booted*)
+								if [ "$DETAILS" = "14" ]
+								then
+								echo "Base station successfully started. Messages can now be sent."
+								INITIALIZED=true
+								else
+								echo "Base station radio failed to start: status $DETAILS. "
+								
+								fi
+								HANDLED=true
+								;;
+								
+							*) 
+						esac
+						;;
+		
+						*) 
+		
+					esac
+		
+				;; 
+				
+				*)
+				;;
+			esac
 			
-			WRITE=false
-			
+		if [ "$HANDLED" != "true" ] 
+		then
+		 
 		if [ -x "$BASE/commands/$FROM/$DATA" ]
 			then
 			echo "Calling $BASE/commands/$FROM/$DATA"
@@ -37,55 +81,21 @@ while read TO FROM DATA DETAILS; do
 			
 			$BASE/commands/common/$DATA $FROM $DETAILS >&3
 		else
+			WRITE=true
+			
 			
 			# process fields here, and access them with $date, $time, etc.
-			case "$FROM" in
-				BASES)
-					case "$TO" in
-						BASES)
-						case "$DATA" in
-							UPDATE*)
-							#	echo "Update requested"
-								# do stuff;
-								# echo -ne "."
-							;;
-							Message_sent_to*)
-								echo "Message successfully sent to $DETAILS."
-								;;
-							Booted*)
-								if [ "$DETAILS" = "14" ]
-								then
-								echo "Base station successfully started. Messages can now be sent."
-								INITIALIZED=true
-								else
-								echo "Base station radio failed to start: status $DETAILS. "
-								fi
-								sleep 3
-								;;
-								
-							*)
-								WRITE=true
-						esac
-						;;
-		
-						*)
-							WRITE=true
-		
-					esac
-		
-				;; 
-				
-				*)
-				WRITE=true;;
-			esac
+			
+		fi
+		fi
+			
 			if [ "$WRITE" = "true" ]
 			then
 				echo  "From $FROM to $TO, I got $DATA"
 				mkdir -p $BASE/in/`date +%Y-%m-%d`/$FROM/ && echo "$DATA $DETAILS" > "$BASE/in/`date +%Y-%m-%d`/$FROM/`date +%s.%N`"
 				
 			fi
-		
-		fi
+		 
 	
 	fi
 	if [ "$INITIALIZED" = "true" ]
