@@ -56,22 +56,7 @@ void SetupMirfClient() {
 }
 
 
-
-byte txFifoEmpty() {
-	uint8_t fifoStatus;
-	readRegister(FIFO_STATUS, &fifoStatus, sizeof(fifoStatus));
-	return (fifoStatus & _BV(TX_EMPTY));
-
-}
-
-byte txFifoFull() {
-	uint8_t fifoStatus;
-	readRegister(FIFO_STATUS, &fifoStatus, sizeof(fifoStatus));
-	// return (fifoStatus & _BV(TX_FULL));
-	return fifoStatus;
-}
-
-
+ 
 
 
 void SendToBase(String theMessage) {
