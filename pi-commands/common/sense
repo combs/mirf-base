@@ -11,7 +11,7 @@ cd `dirname $0`
 			do 
 			if [ "$ZONE" != "" ] 
 				then
-					find "$ZONE" -type f -maxdepth 1 -mindepth 1 | sed -e 's:.*/::' >> $TEMP
+					find "$ZONE" -maxdepth 1 -mindepth 1 -type f | sed -e 's:.*/::' >> $TEMP
 			fi
 		done
 		CLIENTS=`cat $TEMP|sort|uniq`
