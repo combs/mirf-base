@@ -5,37 +5,27 @@
 #include <avr/wdt.h>
 #include <avr/sleep.h>
 #include <avr/power.h>
+#include <EEPROM.h>
 
 void setup();
 
 #include "mirfscreenconfig.h"
 
+#include "MirfClient.h"
+
 
 #define MIRF_PINS_STANDARD
 // #define MIRF_PINS_PCB
 
-
-String inputString = "";         // a string to hold incoming data
-boolean stringComplete = false;  // whether the string is complete
 volatile byte updateRequested = true;
 volatile byte paintRequested = true;
-volatile long msTurnedOn = 0;
+volatile byte sleepRequested = false;
 
-
-
-// const long msScreenUpdateInterval=1000;
-
-long msScreenUpdated=0;
-
-volatile long msGotForecast = 0;
-volatile long msRequestedForecast = 0;
-const byte Payload = 32;
-char stringForecast0[Payload];
-char stringForecast1[Payload];
-char stringForecastNow[Payload];
-char stringForecastLater[Payload];
-char stringForecastConditions[Payload];
-// char stringBuffer[Payload];
+volatile long secondsSinceStartup = 0;
+volatile long secondsGotUpdate = 0;
+volatile long secondsRequestedUpdate = 0;
+volatile long secondsTurnedOn = 0;
+volatile long secondsNapStarted=0;
 
 
 #define PIN_METER_ONE 3
@@ -43,68 +33,45 @@ char stringForecastConditions[Payload];
 #define PIN_METER_THREE 6
 
 
+byte valueOne=0;
+byte valueTwo=0;
+byte valueThree=0;
+
 void setup()
 {
-//  Serial.begin(115200);
-//  Serial.println("hello");
+  //  Serial.begin(115200);
+  //  Serial.println("hello");
 
   wdt_disable();
   power_adc_disable();
+  power_usart0_disable();
+
+  getNameClient();
+  getNameBase();
 
   pinMode(2,INPUT);
+
   pinMode(PIN_METER_ONE,OUTPUT);
   pinMode(PIN_METER_TWO,OUTPUT);
   pinMode(PIN_METER_THREE,OUTPUT);
-  //  Serial.begin(115200);
-  inputString.reserve(Payload+1);
 
-  Mirf.spi = &MirfHardwareSpi;
-#ifdef MIRF_PINS_PCB
-  Mirf.cePin=8;
-  Mirf.csnPin=9;
-#endif
-  Mirf.init();
+  SetupMirfClient();
 
-  // name the receiving channel - must match tranmitter setting!
-  Mirf.setRADDR((byte *)nameClient);
-
-  Mirf.setTADDR((byte *)nameBase);
-
-
-  Mirf.payload=Payload;
-
-  Mirf.channel = 10;
-
-
-  // configure 15 retries, 500us between attempts
-  Mirf.configRegister(SETUP_RETR,(B0001<<ARD ) | (B1111<<ARC));
-
-  // Set 1MHz data rate - this increases the range slightly
-  Mirf.configRegister(RF_SETUP,0x06);
-
-  // now config the device.... 
-  Mirf.config();  
   SendToBase("Starting");
 
-  //SendMessage(inputString);
+  byte status=Mirf.getStatus(); 
 
-  byte status=Mirf.getStatus();
-  // Serial.println(status);
-
-  if (status==14) {
-
-    // Successful startup.
-
+  if (status==14) { 
 
   } 
-  else {
-    wanderMeters(5);
+  else { 
     pinMode(13,OUTPUT);
     while (true) {
       digitalWrite(13,HIGH);
       delay(1000);
       digitalWrite(13,LOW);
       delay(500);
+      wanderMeters(5);
     }
   }
 
@@ -113,6 +80,7 @@ void setup()
   flagUpdate();
 
   SendToBase("Started");
+  delay(100); // Avoid message-spamming race condition at startup
 
 
 }
@@ -120,277 +88,184 @@ void setup()
 
 void flagUpdate() {
   updateRequested=true;
-  msTurnedOn=millis();
-  
+  secondsTurnedOn=secondsSinceStartup;
 
 }
 
 
 void loop()
 {
-  
-  // waking();
 
 
-  byte data[Payload];
+  //  waking();
 
-  if (updateRequested==true) {
-
-    updateRequested=false;
-    if ( ( millis() - msGotForecast > msMaxDataAge ) || msGotForecast==0) {
-      msRequestedForecast=millis();
-      requestUpdate();
-
-
-    } 
-    else {
-      // paintScreen();
-
-    }
-
-  }
-  if ((millis() - msRequestedForecast > msTimeout ) && 
-  (millis() - msRequestedForecast < ( msTimeout+msTimeout ) ) && 
-  (millis() - msGotForecast > msMaxDataAge || msGotForecast==0 ) ) {
-    //    updateRequested=true;
-    //flagUpdate();
-    SendToBase("Timeout");
-
-    /*
-    char theBuffer[Payload]="";
-     ltoa(msGotForecast,theBuffer,10);
-     SendToBase(theBuffer);
-     */
-
-    msRequestedForecast=millis();
-    requestUpdate();
-
-    //timeout
-  }
-
-  // is there any data pending? 
-  if( Mirf.dataReady() )
-  {
-
-    // if (millis() - msRequestedForecast < msTimeout) {
-    // msGotForecast = millis();
-    // We don't want to cache unrelated status updates from the base station
-    // - if a message is received that was not recently requested, do not update receive time
-
-    //}
-
-
-
-    Mirf.getData((byte *) &data);
-    String thePayload=String((char *)data);
-
-    // Serial.println(thePayload);
-
-    char theCommand=thePayload[5];
-    char theMessage[Payload];
-    thePayload.substring(6).toCharArray(theMessage,Payload);
-    char valueOne[4]="000";
-    char valueTwo[4]="000";
-    char valueThree[4]="000";
-    
-    //    SendToBase("Ack");
-
-
-    for (byte a=0;a<Payload;a++) {
-      if (theMessage[a]=='\r' || theMessage[a]=='\n'){
-        theMessage[a]='\0';
-        // Look for linebreaks and swap them out for end-of-string
-      }
-    }
-    byte length=strlen(theMessage);
-
-    switch (theCommand) {
-
-    case 'A':  // Ack request; don't print anything
-      msRequestedForecast=millis();
-      break;
-
-    case 'V':  // Values
-      if (length>8) {
-        msGotForecast=millis();
-        thePayload.substring(7,9).toCharArray(valueOne,4);
-        thePayload.substring(10,12).toCharArray(valueTwo,4);
-
-        thePayload.substring(13,15).toCharArray(valueThree,4);
-   
-   /*     Serial.println(thePayload);
-
-        Serial.println(valueOne);
-        Serial.println(valueTwo);
-        Serial.println(valueThree);
-*/
-        analogWrite(PIN_METER_ONE,atoi(valueOne));
-        analogWrite(PIN_METER_TWO,atoi(valueTwo));
-        analogWrite(PIN_METER_THREE,atoi(valueThree));
-
-      } 
-      else {
-     //   Serial.println(length);
-      }
-
-
-      break;
-    case 'u':
-    case 'r':
-    case 's': 
-      // Radio crosstalk  
-      break;
-    default:
-      break;
-    }
-
-
-
-
-
+  if (paintRequested==true) {
+    display();
+    backlight();
+    paintScreen();
+    paintRequested=false;
   }
 
 
+  if (secondsSinceStartup - secondsTurnedOn > secondsScreenAwakeTime || ( secondsSinceStartup - secondsNapStarted < secondsSleep )) {
 
-  // wanderMeters(10);
-  delay(1000);
-
-  // delay(250);
-
-  //  char theBuffer[Payload]="";
-  //  ltoa(msTurnedOn,theBuffer,10);
-  //  SendToBase(theBuffer);
-
-  if (millis() - msTurnedOn > msOnTime ) {
-
-
-
-    //   sleeping();
+    noBacklight();
+    noDisplay();
+    sleeping();
 
   } 
+
   else {
-    if ( ( ( millis() - msGotForecast ) > msMaxDataAge ) && ( ( millis() - msRequestedForecast ) > msTimeout ) ) {
-      msRequestedForecast=millis();
-      // SendToBase("Refresh");
+
+    Mirf.powerUpRx();
+
+    if ( ( ( secondsSinceStartup - secondsGotUpdate ) > secondsMaxDataAge ) && 
+      ( ( secondsSinceStartup - secondsRequestedUpdate ) > secondsTimeout ) ) {
+      secondsRequestedUpdate=secondsSinceStartup;
+      // ,"Refresh");
       requestUpdate();
       // screen is on, data is old, but let's not flagUpdate because that will keep screen on longer
 
     }
 
+    display();
+    backlight();
+
     //    paintScreen();
 
+    byte data[Payload];
+
+    if (updateRequested==true) {
+
+      updateRequested=false;
+
+      if  ( ( ( secondsSinceStartup - secondsRequestedUpdate > 
+        secondsTimeout+secondsTimeout ) || 
+        (secondsGotUpdate==0 && secondsRequestedUpdate==0))  &&  
+        ( ( secondsSinceStartup - secondsGotUpdate > secondsMaxDataAge ) || 
+        secondsGotUpdate==0)) {
+
+        secondsRequestedUpdate=secondsSinceStartup;
+        requestUpdate();
+
+      } 
+
+    }
+    if ((secondsSinceStartup - secondsRequestedUpdate > secondsTimeout ) && (secondsSinceStartup - secondsRequestedUpdate < ( secondsTimeout+secondsTimeout ) ) && (secondsSinceStartup - secondsGotUpdate > secondsTimeout+secondsTimeout ) ) {
+
+      SendToBase("Timeout");
+      secondsRequestedUpdate=secondsSinceStartup;
+      requestUpdate();
+
+    }
+
+    // is there any data pending? 
+    if( !Mirf.isSending() && Mirf.dataReady() )
+    {
+
+#ifdef LCD_UPDATES_EXTEND_ON_TIME
+      secondsTurnedOn=secondsSinceStartup;
+#endif
+
+      Mirf.getData((byte *) &data);
+      String thePayload=String((char *)data);
+      char theLine=thePayload[5];
+      char theMessage[Payload];
+      thePayload.substring(6).toCharArray(theMessage,Payload);
+
+      for (byte a=0;a<Payload;a++) {
+        if (theMessage[a]=='\r' || theMessage[a]=='\n'){
+          theMessage[a]='\0';
+        }
+      }
+
+      byte length=strlen(theMessage);
+      switch (theLine) {
+
+      case '$':
+        wanderMeters(5);
+        HandleBuiltinMessage(theMessage);  
+
+        break;
+
+      case 'S':
+        // Sleep
+        sleepRequested=true;
+
+        break;
+
+
+      case 'A':  // Ack request; don't print anything
+        secondsRequestedUpdate=secondsSinceStartup;
+        // reset the timeout.
+        break;
+
+      case 'V':  // Values
+        if (length>8) {
+          char stringOne[4];
+          char stringTwo[4];
+          char stringThree[4];
+
+          secondsGotUpdate=secondsSinceStartup;
+          thePayload.substring(7,9).toCharArray(stringOne,4);
+          thePayload.substring(10,12).toCharArray(stringTwo,4);
+
+          thePayload.substring(13,15).toCharArray(stringThree,4);
+
+          /*     Serial.println(thePayload);
+           
+           Serial.println(valueOne);
+           Serial.println(valueTwo);
+           Serial.println(valueThree);
+           */
+          valueOne=atoi(stringOne);
+          valueTwo=atoi(stringTwo);
+          valueThree=atoi(stringThree);
+
+          analogWrite(PIN_METER_ONE,valueOne);
+          analogWrite(PIN_METER_TWO,valueTwo);
+          analogWrite(PIN_METER_THREE,valueThree);
+
+        }
+
+      default:
+        break;
+      }
+
+
+    }
   }
 
-
+  if ( (secondsSinceStartup - secondsRequestedUpdate <  
+    secondsTimeout+secondsTimeout ) && ( sleepRequested==false) ) {
+    delay(50);
+  } 
+  else {
+    if (sleepRequested==true) {
+      secondsNapStarted=secondsSinceStartup;
+      sleepRequested=false;
+    }
+    
+    napping();
+    
+  }
 
 }
 
 void requestUpdate() {
-
-  //  msRequestedForecast=millis();
-  //      inputString="BASESWCLKKupdate";
-  //      SendMessage(inputString);
-  SendToBase("update");
-  //  blockForSend();
+  SendToBase("poll");
 }
-
-void serialEvent() {
-  while (Serial.available()) {
-    // get the new byte:
-    char inChar = (char)Serial.read(); 
-    // add it to the inputString:
-    inputString += inChar;
-    // if the incoming character is a newline, set a flag
-    // so the main loop can do something about it:
-    if (inChar == '\n' || inChar == '\r') {
-      stringComplete = true;
-    } 
-  }
-}
-
-void SendToBase(String theMessage) {
-  char thePayload[Payload];
-  char theMessageChar[Payload];
-
-//  Serial.println(theMessage);
-
-  Mirf.setTADDR((byte *)nameBase);
-  Mirf.setRADDR((byte *)nameClient);
-  Mirf.config();
-
-
-  strcpy(thePayload,nameClient);
-  theMessage.toCharArray(theMessageChar,Payload);
-  strcat(thePayload,theMessageChar);
-
-  Mirf.send((byte *)thePayload);
-  blockForSend();
-
-  // something changes the RADDR to nameBase... auto ack? let's change it back
-
-  Mirf.setRADDR((byte *)nameClient);
-  Mirf.config();
-
-}
-
-
-
-
-void SendMessage(String theMessage) {
-  char theTarget[6];
-  char thePayload[Payload];
-  char theSource[6];
-  theMessage.substring(0,5).toCharArray(theTarget,6);
-  theMessage.substring(5).toCharArray(thePayload,Payload);
-  //   Serial.println(inputString);
-  theMessage.substring(5,5).toCharArray(theSource,6);
-
-
-  Mirf.setTADDR((byte *)theTarget);
-  Mirf.setRADDR((byte *)nameClient);
-
-  //    Mirf.setRADDR((byte *)theSource);
-  // do we want this? malformed message could make this node unreachable 
-
-  Mirf.config();
-  Mirf.send((byte *)thePayload);
-  blockForSend();
-
-  // something changes the RADDR to nameBase... auto ack? let's change it back
-
-  Mirf.setRADDR((byte *)nameClient);
-  Mirf.config();
-
-}
-
-void blockForSend() {
-
-  while( Mirf.isSending() )
-  {
-    delay(1);
-  }
-    Mirf.powerUpRx(); 
-
-}
-
-
-
 
 
 
 void waking() {
 
-  //  setup_watchdog( 	WDTO_500MS ); //Setup watchdog to go off after 500ms
-
-  wdt_reset();
 
 }
 
 void sleeping() {
 
-
-  // setup_watchdog( 	WDTO_8S ); //Setup watchdog to go off after 500ms
-  set_sleep_mode(SLEEP_MODE_IDLE);
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
 
   Mirf.powerDown(); 
@@ -399,19 +274,38 @@ void sleeping() {
   sleep_cpu();
   sleep_disable();
   waking();
-  Mirf.powerUpRx(); 
-  wdt_disable();
 
+}
+
+
+
+void napping() {
+
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
+
+  sleep_enable();
+  sei();
+  sleep_cpu();
+  sleep_disable();
+  waking();
 
 }
 
 ISR(WDT_vect) {
 
+  if (secondsSinceStartup + 1 < secondsSinceStartup) {
+    secondsTurnedOn = 0; 
+    secondsGotUpdate = 0;
+    secondsRequestedUpdate = 0;
+  }
 
-  // buttonPress();  
-
+  secondsSinceStartup++;
 
 }
+
+
+
 
 
 
@@ -452,6 +346,47 @@ void wanderMeters(int seconds) {
 
 
 
+void paintScreen() {
+
+  analogWrite(PIN_METER_ONE,valueOne);
+  analogWrite(PIN_METER_TWO,valueTwo);
+  analogWrite(PIN_METER_THREE,valueThree);
+}
+
+
+void display() {
+
+  pinMode(PIN_METER_ONE,OUTPUT);
+  pinMode(PIN_METER_TWO,OUTPUT);
+  pinMode(PIN_METER_THREE,OUTPUT); 
+
+
+}
+
+void noDisplay() {
+  pinMode(PIN_METER_ONE,INPUT);
+  pinMode(PIN_METER_TWO,INPUT);
+  pinMode(PIN_METER_THREE,INPUT);
+  digitalWrite(PIN_METER_ONE,LOW);
+  digitalWrite(PIN_METER_TWO,LOW);
+  digitalWrite(PIN_METER_THREE,LOW);
+
+
+
+}
+
+
+
+void backlight() {
+
+}
+void noBacklight() {
+}
+
+
+
+
+
 
 
 void setup_watchdog(int timerPrescaler) {
@@ -484,6 +419,8 @@ void setup_watchdog(int timerPrescaler) {
 
 
 }
+
+
 
 
 
