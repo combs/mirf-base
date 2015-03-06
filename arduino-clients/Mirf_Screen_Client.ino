@@ -313,9 +313,14 @@ void loop()
     }
   }
   
-  
+  if (secondsSinceStartup - secondsRequestedForecast <  
+      secondsTimeout+secondsTimeout ) {
+        delay(50);
+      } else {
+        
   napping();
-  
+      }
+      
   
 }
 
