@@ -5,23 +5,38 @@ cd `dirname $0`
 	if [ "$FROM" != "" ] 
 		then
 		TEMP=`mktemp /tmp/nrf24.XXXXX`
+		
+		# identify all zones that contain the client
+		# e.g., /var/local/nrf24/zones/bedroom/members
+		
 		ZONES=`find $BASE/zones/ -name "$FROM" | sed -e 's:/[^/]*$::' `
 		
 		for ZONE in $ZONES
 			do 
-			
-			ZONENAME=`dirname "$ZONE"`
-			if [ -d "$ZONENAME" ] 
-				then
-					touch "$ZONENAME/last-seen"
-			fi
-					
+		
 			if [ "$ZONE" != "" ] 
 				then
-					find "$ZONE" -maxdepth 1 -mindepth 1 -type f | sed -e 's:.*/::' >> $TEMP
+		
+				# get the actual zone path... strip off "members" folder
+				
+				ZONENAME=`dirname "$ZONE"`
+		
+				if [ -d "$ZONENAME" ] 
+					then
+						touch "$ZONENAME/last-seen"
+				fi
+		
+				# save list of all clients in the same zone 
+				
+				find "$ZONE" -maxdepth 1 -mindepth 1 -type f | sed -e 's:.*/::' >> $TEMP
+				
 			fi
 		done
+		
 		CLIENTS=`cat $TEMP|sort|uniq`
+		
+		# alert all clients in the same zone
+		
 		for CLIENT in $CLIENTS
 		do		
 			if [ "$CLIENT" != "" ] 
