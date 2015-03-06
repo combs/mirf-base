@@ -9,7 +9,7 @@ echo "using $SERIAL"
 stty -F $SERIAL cs8 115200 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts >/dev/null
  
 exec 3<> $SERIAL 
-sleep 0.2
+sleep 1
 
 
 while read TO FROM DATA DETAILS; do
@@ -73,35 +73,8 @@ while read TO FROM DATA DETAILS; do
 		
 					esac
 		
-				;;
-				BUS)
-		
-				;;
-				WCLKK)
-					case "$TO" in
-						BASES)
-						case "$DATA" in
-							update*)
-								echo "WCLKKBASES0Today's weather:" >&3
-								sleep 0.1;
-								echo "WCLKKBASES1Byoootiful" >&3
-								# do stuff;
-							;;
-							*)
-								WRITE=true
-						esac
-						;;
-		
-						*)
-							WRITE=true
-		
-					esac
-		
-				;;
-		
-				SNCLK)
-		
-				;;
+				;; 
+				
 				*)
 				WRITE=true;;
 			esac
@@ -117,19 +90,20 @@ while read TO FROM DATA DETAILS; do
 	fi
 	if [ "$INITIALIZED" = "true" ]
 	then
-		
-		if [ `find /var/local/nrf24/out -maxdepth 1 -type f | grep -c '$'` -gt 0 ] 
+		OUTFILES=`find /var/local/nrf24/out -maxdepth 1 -type f `
+		if [ "$OUTFILES" != "" ] 
 			then
 			
-			for FILE in `find /var/local/nrf24/out -maxdepth 1 -type f`
+			for FILE in $OUTFILES
 				do
 				cat "$FILE" && cat "$FILE" >&3 && rm "$FILE" && sleep 0.02
 				done
 		fi
-		if [ `find /var/local/nrf24/out -maxdepth 2 -mindepth 2 -type f | grep -c '$'` -gt 0 ] 
+		NAMEDOUTFILES=`find /var/local/nrf24/out -maxdepth 2 -mindepth 2 -type f`
+		if [ "$NAMEDOUTFILES" != "" ] 
 			then
 			
-			for FILE in `find /var/local/nrf24/out -maxdepth 2 -mindepth 2 -type f`
+			for FILE in $NAMEDOUTFILES
 				do
 				cat "$FILE" && echo -n "`dirname $FILE | sed s:.*/::`BASES" >&3 && cat "$FILE" >&3 && rm "$FILE" && sleep 0.02
 				done
