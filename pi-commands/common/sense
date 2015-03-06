@@ -9,6 +9,13 @@ cd `dirname $0`
 		
 		for ZONE in $ZONES
 			do 
+			
+			ZONENAME=`dirname "$ZONE"`
+			if [ -d "$ZONENAME" ] 
+				then
+					touch "$ZONENAME/last-seen"
+			fi
+					
 			if [ "$ZONE" != "" ] 
 				then
 					find "$ZONE" -maxdepth 1 -mindepth 1 -type f | sed -e 's:.*/::' >> $TEMP
