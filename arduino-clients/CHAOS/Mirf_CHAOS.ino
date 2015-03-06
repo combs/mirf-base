@@ -122,7 +122,6 @@ void loop()
     if ( ( ( secondsSinceStartup - secondsGotUpdate ) > secondsMaxDataAge ) && 
       ( ( secondsSinceStartup - secondsRequestedUpdate ) > secondsTimeout ) ) {
       secondsRequestedUpdate=secondsSinceStartup;
-      // ,"Refresh");
       requestUpdate();
       // screen is on, data is old, but let's not flagUpdate because that will keep screen on longer
 
@@ -192,6 +191,7 @@ void loop()
         // Sleep
         sleepRequested=true;
 
+        updateRequested=true;
         break;
 
 
