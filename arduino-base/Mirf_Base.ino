@@ -3,12 +3,19 @@
 
 // #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
+#include <EEPROM.h>
+
+char nameBase[6] = "BASES";
+char nameClient[6] = "BASES";
+
+#include "MirfClient.h"
 
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 
 long msUpdateInterval=500;
 long msLastUpdate=0;
+
 
 
 
@@ -120,10 +127,11 @@ void loop()
       Mirf.setTADDR((byte *)theTarget);
       Mirf.setRADDR((byte *)"BASES");
       Mirf.config();
+      Mirf.powerUpTx();
       Mirf.send((byte *)theMessage);
       blockForSend();
-      Mirf.setRADDR((byte *)"BASES");
-      Mirf.config(); 
+      Mirf.powerUpRx();
+      
       Serial.print("BASES BASES Message_sent_to ");
       Serial.println(theTarget);
       Serial.flush();
@@ -135,21 +143,10 @@ void loop()
 
   }
   
-  
-// The TX_EMPTY register doesn't seem to get set properly    
-//  if (Mirf.txFifoEmpty() || Mirf.txFifoFull() ) {
+
     blockForSend();
 
        
 }
  
-
-void blockForSend() {
-
-  while( Mirf.isSending() )
-  {
-    delayMicroseconds(100);
-  }
-}
-
-
+ 
