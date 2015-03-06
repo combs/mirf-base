@@ -11,7 +11,7 @@ SEEN=false
 		# identify all zones that contain the client
 		# e.g., /var/local/nrf24/zones/bedroom/members
 		
-		ZONES=`find $BASE/zones -name "$FROM" | sed -e 's:/[^/]*$::' `
+		ZONES=`find $BASE/zones/ -name "$FROM" | sed -e 's:/[^/]*$::' `
 		
 		for ZONE in $ZONES
 			do 
