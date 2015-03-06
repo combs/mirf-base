@@ -27,17 +27,17 @@ volatile byte updateRequested = true;
 volatile byte paintRequested = true;
 
 volatile long secondsSinceStartup = 0;
-volatile long secondsGotForecast = 0;
-volatile long secondsRequestedForecast = 0;
+volatile long secondsGotUpdate = 0;
+volatile long secondsRequestedUpdate = 0;
 volatile long secondsTurnedOn = 0;
 
- 
+
 // const byte Payload = 32;
-char stringForecast0[Payload];
-char stringForecast1[Payload];
-char stringForecastNow[Payload];
-char stringForecastLater[Payload];
-char stringForecastConditions[Payload];
+char stringUpdate0[Payload];
+char stringUpdate1[Payload];
+char stringUpdateNow[Payload];
+char stringUpdateLater[Payload];
+char stringUpdateConditions[Payload];
 // char stringBuffer[Payload];
 
 #ifdef LCD_I2C
@@ -53,14 +53,14 @@ LiquidCrystal lcd(7, 6, A3, A2, A1, A0);
 
 void setup()
 {
-  
+
   wdt_disable();
   power_adc_disable();
   power_usart0_disable();
 
   getNameClient();
   getNameBase();
-  
+
   pinMode(2,INPUT);
 
   //  Serial.begin(115200);
@@ -73,9 +73,9 @@ void setup()
   delay(2);
   lcd.clear();
   lcd.print("Starting radio..");
-  
+
   SetupMirfClient();
-  
+
 
 
 
@@ -116,8 +116,8 @@ void setup()
   //  SendMessage(inputString);
   SendToBase("Started");
   delay(1000); // Avoid message-spamming race condition at startup
-  
-  
+
+
 }
 
 void myLCDClear() {
@@ -167,9 +167,9 @@ void loop()
 
     Mirf.powerUpRx();
 
-    if ( ( ( secondsSinceStartup - secondsGotForecast ) > secondsMaxDataAge ) && 
-    ( ( secondsSinceStartup - secondsRequestedForecast ) > secondsTimeout ) ) {
-      secondsRequestedForecast=secondsSinceStartup;
+    if ( ( ( secondsSinceStartup - secondsGotUpdate ) > secondsMaxDataAge ) && 
+      ( ( secondsSinceStartup - secondsRequestedUpdate ) > secondsTimeout ) ) {
+      secondsRequestedUpdate=secondsSinceStartup;
       // ,"Refresh");
       requestUpdate();
       // screen is on, data is old, but let's not flagUpdate because that will keep screen on longer
@@ -187,22 +187,22 @@ void loop()
 
       updateRequested=false;
 
-      if  ( ( ( secondsSinceStartup - secondsRequestedForecast > 
-      secondsTimeout+secondsTimeout ) || 
-      (secondsGotForecast==0 && secondsRequestedForecast==0))  &&  
-      ( ( secondsSinceStartup - secondsGotForecast > secondsMaxDataAge ) || 
-      secondsGotForecast==0)) {
-        
-        secondsRequestedForecast=secondsSinceStartup;
+      if  ( ( ( secondsSinceStartup - secondsRequestedUpdate > 
+        secondsTimeout+secondsTimeout ) || 
+        (secondsGotUpdate==0 && secondsRequestedUpdate==0))  &&  
+        ( ( secondsSinceStartup - secondsGotUpdate > secondsMaxDataAge ) || 
+        secondsGotUpdate==0)) {
+
+        secondsRequestedUpdate=secondsSinceStartup;
         requestUpdate();
 
       } 
 
     }
-    if ((secondsSinceStartup - secondsRequestedForecast > secondsTimeout ) && (secondsSinceStartup - secondsRequestedForecast < ( secondsTimeout+secondsTimeout ) ) && (secondsSinceStartup - secondsGotForecast > secondsTimeout+secondsTimeout ) ) {
+    if ((secondsSinceStartup - secondsRequestedUpdate > secondsTimeout ) && (secondsSinceStartup - secondsRequestedUpdate < ( secondsTimeout+secondsTimeout ) ) && (secondsSinceStartup - secondsGotUpdate > secondsTimeout+secondsTimeout ) ) {
 
       SendToBase("Timeout");
-      secondsRequestedForecast=secondsSinceStartup;
+      secondsRequestedUpdate=secondsSinceStartup;
       requestUpdate();
 
     }
@@ -231,7 +231,7 @@ void loop()
       byte y=0;
       byte length=strlen(theMessage);
       switch (theLine) {
-        
+
       case '$':
         myLCDClear();
         lcd.print("System update...");
@@ -243,38 +243,38 @@ void loop()
         theMessage[0]='\0';
 
         break;
-        
+
       case '0': // first line full
-        secondsGotForecast = secondsSinceStartup;
-        strcpy(stringForecast0,theMessage);
+        secondsGotUpdate = secondsSinceStartup;
+        strcpy(stringUpdate0,theMessage);
         x=0;
         y=0;
         length=16;
         break;
 
       case '1': // second line full
-        secondsGotForecast = secondsSinceStartup;
-        strcpy(stringForecast1,theMessage);
+        secondsGotUpdate = secondsSinceStartup;
+        strcpy(stringUpdate1,theMessage);
         x=0;
         y=1;
         length=16;
         break;
       case 'C': // current Conditions
-        secondsGotForecast = secondsSinceStartup;
-        strcpy(stringForecastConditions,theMessage);
+        secondsGotUpdate = secondsSinceStartup;
+        strcpy(stringUpdateConditions,theMessage);
         x=0;
         y=1;
         break;
       case 'N': // temp Now
-        secondsGotForecast = secondsSinceStartup;
-        strcpy(stringForecastNow,theMessage);
+        secondsGotUpdate = secondsSinceStartup;
+        strcpy(stringUpdateNow,theMessage);
         x=0;
         y=0;
         break;
       case 'L':  // temp Later
-        secondsGotForecast = secondsSinceStartup;
-        strcpy(stringForecastLater,theMessage);
-        x=16-strlen(stringForecastLater);
+        secondsGotUpdate = secondsSinceStartup;
+        strcpy(stringUpdateLater,theMessage);
+        x=16-strlen(stringUpdateLater);
         y=0;
         break;
       case 'A':  // Ack request; don't print anything
@@ -282,7 +282,7 @@ void loop()
         y=4;
         length=0;
         theMessage[0]='\0';
-        secondsRequestedForecast=secondsSinceStartup;
+        secondsRequestedUpdate=secondsSinceStartup;
         break;
       case 'u':
       case 'r':
@@ -293,7 +293,7 @@ void loop()
         thePayload.toCharArray(theMessage,Payload);
         length=strlen(theMessage);
         break;
-        
+
       default:
         break;
       }
@@ -312,21 +312,22 @@ void loop()
 
     }
   }
-  
-  if (secondsSinceStartup - secondsRequestedForecast <  
-      secondsTimeout+secondsTimeout ) {
-        delay(50);
-      } else {
-        
-  napping();
-      }
-      
-  
+
+  if (secondsSinceStartup - secondsRequestedUpdate <  
+    secondsTimeout+secondsTimeout ) {
+    delay(50);
+  } 
+  else {
+
+    napping();
+  }
+
+
 }
 
 void requestUpdate() {
 
-  lcd.setCursor(strlen(stringForecastNow),0);
+  lcd.setCursor(strlen(stringUpdateNow),0);
   lcd.blink();
   SendToBase("sense");
 
@@ -350,32 +351,32 @@ void serialEvent() {
 void paintScreen() {
 #ifdef LCD_CLEAR_ON_SLEEP
 
-  if (secondsSinceStartup - secondsGotForecast > secondsMaxDataAge) {
+  if (secondsSinceStartup - secondsGotUpdate > secondsMaxDataAge) {
     myLCDClear();
     return;
   }
 #endif
 
   lcd.setCursor(0,0);
-  if (strlen(stringForecastNow) > 1) {
+  if (strlen(stringUpdateNow) > 1) {
     myLCDClear();
-    lcd.print( stringForecastNow);
-    lcd.setCursor(16-(strlen(stringForecastLater)),0);
-    lcd.print( stringForecastLater);
+    lcd.print( stringUpdateNow);
+    lcd.setCursor(16-(strlen(stringUpdateLater)),0);
+    lcd.print( stringUpdateLater);
   } 
-  else if (strlen(stringForecast0) > 1 ) {
+  else if (strlen(stringUpdate0) > 1 ) {
     myLCDClear();
-    lcd.print(stringForecast0);
+    lcd.print(stringUpdate0);
   }
   lcd.setCursor(0,1);  
 
-  if (strlen(stringForecastConditions) > 1) {
+  if (strlen(stringUpdateConditions) > 1) {
 
-    lcd.print( stringForecastConditions); 
+    lcd.print( stringUpdateConditions); 
   }
-  else if (strlen(stringForecast0) > 1 ) {
+  else if (strlen(stringUpdate0) > 1 ) {
 
-    lcd.print(stringForecast1);
+    lcd.print(stringUpdate1);
   }
 
 }
@@ -433,12 +434,7 @@ void noBacklight() {
 
 
 void waking() {
-
-  // do this only if... ?
-
-//  Mirf.powerUpRx(); 
-
-
+ 
 
 }
 
@@ -462,7 +458,7 @@ void napping() {
 
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
- 
+
   sleep_enable();
   sei();
   sleep_cpu();
@@ -475,13 +471,14 @@ ISR(WDT_vect) {
 
   if (secondsSinceStartup + 1 < secondsSinceStartup) {
     secondsTurnedOn = 0; 
-    secondsGotForecast = 0;
-    secondsRequestedForecast = 0;
+    secondsGotUpdate = 0;
+    secondsRequestedUpdate = 0;
   }
 
   secondsSinceStartup++;
 
 }
+
 
 
 
