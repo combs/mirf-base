@@ -2,7 +2,7 @@
 cd `dirname $0`
 . ../common/get-directories
 
-SEEN=false
+SEEN="false"
 
 	if [ "$FROM" != "" ] 
 		then
@@ -38,7 +38,7 @@ SEEN=false
 	fi
 
 
-if [ "$SEEN" != "false" ] 
+if [ "$SEEN" == "true" ] 
 	then
  	if [ "$FROM" != "" ] 
 		then	
