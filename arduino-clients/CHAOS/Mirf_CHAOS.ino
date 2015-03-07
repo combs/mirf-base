@@ -10,7 +10,6 @@
 void setup();
 
 #include "mirfscreenconfig.h"
-
 #include "watchdog.h"
 #include "MirfClient.h"
 
@@ -34,9 +33,9 @@ volatile long secondsNapStarted=0;
 #define PIN_METER_THREE 6
 
 
-byte valueOne=0;
-byte valueTwo=0;
-byte valueThree=0;
+volatile int valueOne=0;
+volatile int valueTwo=0;
+volatile int valueThree=0;
 
 void setup()
 {
@@ -84,6 +83,7 @@ void setup()
   delay(100); // Avoid message-spamming race condition at startup
 
   setup_watchdog(WDTO_1S);
+  wanderMeters(1);
 
 
 
@@ -111,7 +111,8 @@ void loop()
   }
 
 
-  if (secondsSinceStartup - secondsTurnedOn > secondsScreenAwakeTime || ( secondsSinceStartup - secondsNapStarted < secondsSleep )) {
+  if ((secondsSinceStartup - secondsTurnedOn > secondsScreenAwakeTime ) ||
+    ( secondsSinceStartup - secondsNapStarted < secondsSleep )) {
 
     noBacklight();
     noDisplay();
@@ -126,7 +127,7 @@ void loop()
     if ( ( ( secondsSinceStartup - secondsGotUpdate ) > secondsMaxDataAge ) && 
       ( ( secondsSinceStartup - secondsRequestedUpdate ) > secondsTimeout ) ) {
       secondsRequestedUpdate=secondsSinceStartup;
- 
+
       requestUpdate();
       // screen is on, data is old, but let's not flagUpdate because that will keep screen on longer
 
@@ -143,11 +144,21 @@ void loop()
 
       updateRequested=false;
 
-      if  ( ( ( secondsSinceStartup - secondsRequestedUpdate > 
-        secondsTimeout+secondsTimeout ) || 
-        (secondsGotUpdate==0 && secondsRequestedUpdate==0))  &&  
-        ( ( secondsSinceStartup - secondsGotUpdate > secondsMaxDataAge ) || 
-        secondsGotUpdate==0)) {
+      if  ( // more than double timeout since last asked OR just started
+      ( ( secondsSinceStartup - secondsRequestedUpdate > 
+        secondsTimeout+secondsTimeout ) ||  
+        (secondsGotUpdate==0 && secondsRequestedUpdate==0) )  && 
+        //  AND
+      // it's been longer than maxDataAge since we got info OR we've never gotten info
+
+      ( ( secondsSinceStartup - secondsGotUpdate > secondsMaxDataAge ) || 
+        secondsGotUpdate==0 ) 
+        // OR we just woke up from sleep
+      ||
+        ( ( (secondsSinceStartup - secondsNapStarted) > (secondsSleep - 1) ) && 
+        ( (secondsSinceStartup - secondsNapStarted) < (secondsSleep + 15) ) )
+
+      ) {
 
         secondsRequestedUpdate=secondsSinceStartup;
         requestUpdate();
@@ -155,7 +166,9 @@ void loop()
       } 
 
     }
-    if ((secondsSinceStartup - secondsRequestedUpdate > secondsTimeout ) && (secondsSinceStartup - secondsRequestedUpdate < ( secondsTimeout+secondsTimeout ) ) && (secondsSinceStartup - secondsGotUpdate > secondsTimeout+secondsTimeout ) ) {
+    if ((secondsSinceStartup - secondsRequestedUpdate > secondsTimeout ) && 
+      (secondsSinceStartup - secondsRequestedUpdate < ( secondsTimeout+secondsTimeout ) ) && 
+      (secondsSinceStartup - secondsGotUpdate > secondsTimeout+secondsTimeout ) ) {
 
       SendToBase("Timeout");
       secondsRequestedUpdate=secondsSinceStartup;
@@ -173,7 +186,7 @@ void loop()
 
       Mirf.getData((byte *) &data);
       String thePayload=String((char *)data);
-      char theLine=thePayload[5];
+      char theCommand=thePayload[5];
       char theMessage[Payload];
       thePayload.substring(6).toCharArray(theMessage,Payload);
 
@@ -184,7 +197,7 @@ void loop()
       }
 
       byte length=strlen(theMessage);
-      switch (theLine) {
+      switch (theCommand) {
 
       case '$':
         wanderMeters(5);
@@ -206,15 +219,15 @@ void loop()
 
       case 'V':  // Values
         if (length>8) {
-          char stringOne[4];
-          char stringTwo[4];
-          char stringThree[4];
+          char stringOne[4]="000";
+          char stringTwo[4]="000";
+          char stringThree[4]="000";
 
           secondsGotUpdate=secondsSinceStartup;
-          thePayload.substring(7,9).toCharArray(stringOne,4);
-          thePayload.substring(10,12).toCharArray(stringTwo,4);
+          thePayload.substring(6,9).toCharArray(stringOne,4);
+          thePayload.substring(9,12).toCharArray(stringTwo,4);
 
-          thePayload.substring(13,15).toCharArray(stringThree,4);
+          thePayload.substring(12,15).toCharArray(stringThree,4);
 
           /*     Serial.println(thePayload);
            
@@ -226,7 +239,7 @@ void loop()
           valueTwo=atoi(stringTwo);
           valueThree=atoi(stringThree);
 
-          analogWrite(PIN_METER_ONE,valueOne);
+          analogWrite(PIN_METER_ONE,atoi(stringOne));
           analogWrite(PIN_METER_TWO,valueTwo);
           analogWrite(PIN_METER_THREE,valueThree);
 
@@ -249,9 +262,9 @@ void loop()
       secondsNapStarted=secondsSinceStartup;
       sleepRequested=false;
     }
-    
+
     napping();
-    
+
   }
 
 }
@@ -269,7 +282,7 @@ void waking() {
 
 void sleeping() {
 
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  set_sleep_mode(SLEEP_MODE_IDLE);
   //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
 
   Mirf.powerDown(); 
@@ -285,7 +298,7 @@ void sleeping() {
 
 void napping() {
 
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  set_sleep_mode(SLEEP_MODE_IDLE);
   //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
 
   sleep_enable();
@@ -392,7 +405,8 @@ void noBacklight() {
 
 
 
- 
+
+
 
 
 
