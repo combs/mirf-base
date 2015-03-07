@@ -111,8 +111,8 @@ void loop()
   }
 
 
-  if ((secondsSinceStartup - secondsTurnedOn > secondsScreenAwakeTime ) ||
-    ( secondsSinceStartup - secondsNapStarted < secondsSleep )) {
+  if ( ((secondsSinceStartup - secondsTurnedOn > secondsScreenAwakeTime ) ||
+    ( secondsSinceStartup - secondsNapStarted < secondsSleep )) && (secondsNapStarted != 0)) {
 
     noBacklight();
     noDisplay();
