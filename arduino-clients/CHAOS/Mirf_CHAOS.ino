@@ -76,7 +76,7 @@ void setup()
   }
 
 
-  attachInterrupt(0,flagUpdate,RISING);
+ // attachInterrupt(0,flagUpdate,RISING);
   flagUpdate();
 
   SendToBase("Started");
@@ -111,12 +111,18 @@ void loop()
   }
 
 
-  if ( ((secondsSinceStartup - secondsTurnedOn > secondsScreenAwakeTime ) ||
-    ( secondsSinceStartup - secondsNapStarted < secondsSleep )) && (secondsNapStarted != 0)) {
-
+  if ( secondsSinceStartup - secondsTurnedOn > secondsScreenAwakeTime ) {
+    
+    noBacklight();
+    noDisplay(); 
+    sleeping();
+    
+  } else if ((( secondsSinceStartup - secondsNapStarted < secondsSleep )) && (secondsNapStarted != 0)) 
+    {
+    Mirf.powerDown();
     noBacklight();
     noDisplay();
-    sleeping();
+    napping();
 
   } 
 
@@ -156,7 +162,8 @@ void loop()
         // OR we just woke up from sleep
       ||
         ( ( (secondsSinceStartup - secondsNapStarted) > (secondsSleep - 1) ) && 
-        ( (secondsSinceStartup - secondsNapStarted) < (secondsSleep + 15) ) )
+        ( (secondsSinceStartup - secondsNapStarted) < (secondsSleep + 5) ) && 
+        ( (secondsSinceStartup - secondsRequestedUpdate) > (secondsSleep) )  )
 
       ) {
 
@@ -282,7 +289,7 @@ void waking() {
 
 void sleeping() {
 
-  set_sleep_mode(SLEEP_MODE_IDLE);
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
 
   Mirf.powerDown(); 
