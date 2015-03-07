@@ -37,9 +37,9 @@ SEEN="false"
 
 	fi
 
-
-if [ "$SEEN" == "true" ] 
+if [ "$SEEN" != "false" ] 
 	then
+
  	if [ "$FROM" != "" ] 
 		then	
 				
@@ -52,7 +52,9 @@ if [ "$SEEN" == "true" ]
 		fi	
 	fi
 else 
-	echo "$FROMBASESSleep"
+
+echo -n "$FROM"
+echo "BASESSleep"
 	
 fi
 
