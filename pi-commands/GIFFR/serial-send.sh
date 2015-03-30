@@ -36,7 +36,14 @@ for arg in *.uue; do echo "sending $arg" ; head -1 "$arg" >&3; sleep 1; sed -e '
 	done
 #	sleep 5;
 	mv "$arg" "/tmp/$arg"
-	stty -f $SERIAL cs8 57600 ignbrk -brkint   -echo -echoe -echok -echoctl >/dev/null
+if [ `uname` != "Darwin" ]
+then
+
+	stty -F $SERIAL cs8 57600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke noflsh -ixon -crtscts >/dev/null
+else 
+	stty -f $SERIAL cs8 57600 cread -clocal -crtscts >/dev/null
+
+fi
 	sleep 3	
 	
 done
