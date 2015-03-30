@@ -27,7 +27,7 @@ for arg in *.raw; do echo "uuencoding $arg";uuencode "$arg" "$arg" > "`echo \"$a
 
 rm '*.uue' 2>/dev/null
 
-for arg in *.uue; do echo "sending $arg" ; head -1 "$arg" >&3; sleep 1; sed -e /0/d "$arg" | pv -qL 1k >&3
+for arg in *.uue; do echo "sending $arg" ; head -1 "$arg" >&3; sleep 1; sed -e /0/d "$arg" | pv -qL 3k >&3
 
 	DONE=""
 	while [ "$DONE" != "next" ];  do
