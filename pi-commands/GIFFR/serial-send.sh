@@ -27,12 +27,14 @@ for arg in *.raw; do echo "uuencoding $arg";uuencode "$arg" "$arg" > "`echo \"$a
 
 rm '*.uue' 2>/dev/null
 
-for arg in *.uue; do echo "sending $arg" ; head -1 "$arg" >&3; sleep 1; sed -e /0/d "$arg" | pv -qL 3k >&3
-
+for arg in *.uue; do echo "sending $arg" ; head -1 "$arg" >&3; sleep 1; sed -e '1d' "$arg" | pv -L 4k >&3
 	DONE=""
-	while [ "$DONE" != "next" ];  do
-	read DONE <&3 ;
+	while true;
+	do read DONE <&3 ;
+	echo "$DONE" | grep next && break;
+	echo $DONE
 	done
+#	sleep 5;
 	mv "$arg" "/tmp/$arg"
 	stty -f $SERIAL cs8 57600 ignbrk -brkint   -echo -echoe -echok -echoctl >/dev/null
 	sleep 3	
