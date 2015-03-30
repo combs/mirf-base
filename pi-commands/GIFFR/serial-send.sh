@@ -25,7 +25,8 @@ sleep 3
 
 for arg in *.raw; do echo "uuencoding $arg";uuencode "$arg" "$arg" > "`echo \"$arg\"|sed -e 's:raw:uue:'`" && mv "$arg" "/tmp/$arg"; done
 
-for arg in *.uue; do echo "sending $arg" ; cat "$arg" >&3
+for arg in *.uue; do echo "sending $arg" ; head -1 "$arg" > &3; sleep 1; sed -e /0/d "$arg" >&3
+
 	DONE=""
 	while [ "$DONE" != "next" ];  do
 	read DONE <&3 ;
