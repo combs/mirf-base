@@ -18,10 +18,8 @@ fi
 
 echo "opening $SERIAL"
 
-//exec 3<> $SERIAL 
-
-exec 3< stty -f $SERIAL cs8 57600 cread -clocal -crtscts 
-
+exec 3<> $SERIAL 
+ 
 echo "opened $SERIAL"
 sleep 3
 
