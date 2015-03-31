@@ -35,7 +35,7 @@ if (!$api_key) {
 
 while (!$parsed_json && $errors<2) {
 
-	$json_string_conditions = file_get_contents("http://api.wunderground.com/api/" . $api_key . "/conditions/forecast/q/DC/Washington.json");
+	$json_string_conditions = file_get_contents("http://api.wunderground.com/api/" . $api_key . "/conditions/forecast/alerts/q/DC/Washington.json");
 	$parsed_json = json_decode($json_string_conditions);
 	if (!$parsed_json) {
 		$errors++;
@@ -47,8 +47,11 @@ while (!$parsed_json && $errors<2) {
 // $location = $parsed_json->{'location'}->{'city'};
 $temp_f = $parsed_json->{'current_observation'}->{'temp_f'};
   
+$wind = $parsed_json->{'current_observation'}->{'wind_mph'};
+
 $this_forecast = $parsed_json->{'forecast'}->{'simpleforecast'}->{'forecastday'}[0];
 
+$wind = $this_forecast->{'avewind'}->{'mph'}; // update with forecast if possible
 
 $temp_low = $this_forecast->{'low'}->{'fahrenheit'};
 $temp_high = $this_forecast->{'high'}->{'fahrenheit'};
@@ -57,6 +60,70 @@ $rain_inches = $this_forecast->{'qpf_allday'}->{'in'};
 $precip_chance = $this_forecast->{'pop'};
 $snow_inches = $this_forecast->{'snow_allday'}->{'in'};
 $conditions = $this_forecast->{'conditions'};
+ 
+$alert_priorities = array(
+"HUR" => 100,
+"TOR" => 95,
+"TOW" => 90,
+"WRN" => 85,
+"SEW" => 80,
+"VOL" => 75,
+"WIN" => 13, // this will be shown in precip
+"FLO" => 10, // flooding doesn't concern us
+"WAT" => 10, // flooding doesn't concern us
+"WND" => 52,
+"SVR" => 60,
+"HEA" => 10, // this will be shown in temps
+"FOG" => 20,
+"SPE" => 25,
+"FIR" => 50,
+"HWW" => 98,
+"REC" => 15, // oooOOoo a record
+"PUB" => 0, 
+"REP" => 0 // what are these even for
+);
+$alert_texts = array(
+"HUR" => "HURRICANE ALERT",
+"TOR" => "TORNADO WARNING",
+"TOW" => "Tornado Watch",
+"WRN" => "Severe Storm",
+"SEW" => "Storm Watch",
+"VOL" => "Volcano Warning",
+"WIN" => "Winter Weather",
+"FLO" => "Flood Warning",
+"WAT" => "Flood Watch",
+"WND" => "Alert: High Wind",
+"SVR" => "Severe Weather",
+"HEA" => "Heat Advisory",
+"FOG" => "Dense Fog",
+"SPE" => "Special Weather",
+"FIR" => "Fire Watch",
+"HWW" => "HURRICANE WIND",
+"REC" => "Record Just Set",
+"PUB" => "Public Report",
+"REP" => "NWS Says Hi"
+);
+
+
+$worst_so_far=0;
+$alert_text=""; 
+ //if ($alerts) {
+		
+	foreach ($parsed_json->{'alerts'} as $alert) {
+		echo $alert->{'type'};
+		
+		echo $alert_priorities[$alert->{'type'}];		
+		
+		if ($alert_priorities[$alert->{'type'}] > $worst_so_far) {
+			$worst_so_far=$alert_priorities[$alert->{'type'}];
+			$alert_text=$alert->{'description'};
+			if ( strlen($alert_text)>16  && array_key_exists($alert->{'type'},$alert_texts)) {
+				$alert_text=$alert_texts[$alert->{'type'}];
+			}
+
+		}
+	}
+//}
 
 
 $outputConditions = "WCLKKBASESC";
@@ -80,22 +147,32 @@ echo $outputLater;
 file_put_contents($cache_file, $outputLater, FILE_APPEND | LOCK_EX);
 
 
-
-if ($snow_inches > 0 ) {
+if ($worst_so_far > 15 ) {
+	
+		$outputConditions .= $alert_text . "\n"; 
+			
+} else if ($snow_inches > 0 && $precip_chance > 0 ) {
 	$outputConditions .= round($snow_inches,1) . '" SNOW! (' . $precip_chance . "%)" . "\n";
 	
 	
-} else if ($rain_inches > 0 && $rain_inches < 0.1 ) {
+} else if ($rain_inches > 0 && $rain_inches < 0.1 && $precip_chance > 0  ) {
 	
 	$outputConditions .= 'Light mist (' . $precip_chance . "%)" . "\n";
 
-} else if ($rain_inches > 0.1 ) {
+} else if ($rain_inches > 0.1 && $precip_chance > 0 ) {
 	
 	$outputConditions .= round($rain_inches,1) . '" rain (' . $precip_chance . "%)" . "\n";
 
 } else if ($humidity > 60)  {
 
 	$outputConditions .=  round($humidity) . "% humidity" . "\n";
+	
+} else if ($wind > 10)  {
+	$outputConditions .=  round($wind) . "mph wind" . "\n";
+
+} else if ($worst_so_far > 1 ) { // public info advisories, record set, etc.
+	$outputConditions .= $alert_text . "\n";
+
 } else {
 	
 	$outputConditions .=  ucfirst(strtolower(trim($conditions))) . "\n";
