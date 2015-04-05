@@ -81,12 +81,12 @@ while read TO FROM DATA DETAILS; do
 			then
 			echo "Calling $BASE/commands/$FROM/$DATA"
 			
-			$BASE/commands/$FROM/$DATA $FROM $DETAILS >&3
+			$BASE/commands/$FROM/$DATA $FROM $DETAILS >&3 & 
 		elif [ "$DATA" != "" -a -x "$BASE/commands/common/$DATA" ]
 			then 
 			echo "Calling $BASE/commands/common/$DATA"
 			
-			$BASE/commands/common/$DATA $FROM $DETAILS >&3
+			$BASE/commands/common/$DATA $FROM $DETAILS >&3 & 
 		else
 			WRITE=true
 			
