@@ -35,4 +35,28 @@ $DETAILS=&$details;
 $BASE=&$base;
 
 
+// Utility functions
+
+function try_cache($the_file, $max_age) {
+		
+	if (file_exists($the_file)) {
+		if (time() - filemtime($the_file) < $max_age) {
+			$lines=file($the_file);
+			foreach ($lines as $line_num => $line) {
+				echo $line;
+				usleep(50000);
+			}
+			exit;
+			
+		}
+		else {
+			// echo "cache too old";
+		}
+	
+	} else {
+		// echo "cache doesn't exist";
+	}
+
+}
+
 ?>
