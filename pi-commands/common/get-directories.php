@@ -9,10 +9,16 @@ $cache_dir="/tmp/cache-mirf-" . $FROM . "-files/";
 $from=$argv[1];
 
 $base="BASES";
-
-$base_dir=preg_replace("/[^\/]*commands\/.*/","",dirname($argv[0]));
-
 $dir=dirname(__FILE__);
+if (strpos($argv[0],"commands")) {
+	$base_dir=preg_replace("/[^\/]*commands\/.*/","",dirname($argv[0]));
+} else {
+	$base_dir=dirname($argv[0]) . "/../";
+	if (realpath($base_dir)=="") {
+		$base_dir=".";
+	}
+	
+}
 
 $binaries_dir=$base_dir . "binaries/" . $FROM . "/";
 
