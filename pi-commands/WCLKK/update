@@ -126,11 +126,11 @@ $alert_text="";
 //}
 
 
-$outputConditions = "WCLKKBASESC";
-$outputNow = "WCLKKBASESN";
-$outputLater = "WCLKKBASESL";
-$output1 = "WCLKKBASES0";
-$output2 = "WCLKKBASES1";
+$outputConditions = $FROM . $BASE . "C";
+$outputNow = $FROM . $BASE . "N";
+$outputLater = $FROM . $BASE . "L";
+$output1 = $FROM . $BASE . "0";
+$output2 = $FROM . $BASE . "1";
 
 $output1 .=  round($temp_f) . chr(223) . " now. " . $temp_low . "-" . $temp_high . chr(223) . "\n";
 
