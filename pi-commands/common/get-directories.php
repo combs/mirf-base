@@ -3,11 +3,6 @@ chdir(dirname(__FILE__));
 date_default_timezone_set('America/New_York');
 ini_set('default_socket_timeout', 15);
 
-if ($argv[1]) {
-	$from=$argv[1];
-} else {
-	$from="";
-}
 
 $base="BASES";
 $dir=dirname(__FILE__);
@@ -20,6 +15,13 @@ if (strpos($argv[0],"commands")) {
 	}
 	
 }
+
+if ($argv[1]) {
+	$from=$argv[1];
+} else {
+	$from=$dir;
+}
+
 
 $binaries_dir=$base_dir . "binaries/" . $FROM . "/";
 $cache_dir="/tmp/cache-mirf-" . $FROM . "-files/";
