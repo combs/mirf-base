@@ -72,6 +72,7 @@ function cached_echo($the_string) {
 function send_to_client($the_string) {
 	global $FROM, $BASE;
 	cached_echo($FROM . $BASE . $the_string . "\n");
+	usleep(50000); // breather for base station.
 }
 
 
