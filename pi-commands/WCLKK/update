@@ -15,8 +15,8 @@ require "alerts.php";
 
 // Try to use cached results first
 
-$max_age=60*30;
-try_cache($cache_file,$max_age);
+$max_age_seconds=60*30; 
+try_cache($cache_file,$max_age_seconds);
 
 
 // Get locally stored API key
@@ -120,7 +120,9 @@ if ($worst_so_far > 15 ) {
 	
 	$outputConditions .=  round($wind) . "mph wind";
 
-} else if ($worst_so_far > 1 ) { // public info advisories, record set, etc.
+} else if ($worst_so_far > 1 ) { 
+	
+	// public info advisories, record set, etc.
 
 	$outputConditions .= $alert_text;
 
