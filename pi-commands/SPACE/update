@@ -3,12 +3,30 @@
 $our_include_path=dirname(__FILE__) . ":" . dirname(__FILE__) . "/../common" . ":" . GETENV("HOME");
 set_include_path($our_include_path);
 require "get-directories.php";
-echo $our_include_path . "\n";
-echo $base_dir . "\n";
 
 $max_age=30*60; // 30 minutes
 
 try_cache($cache_file, $max_age);
+
+$api_url="http://api.open-notify.org/iss-pass.json?lat=38.939626&lon=-76.990228&n=1&alt=60";
+
+
+while (!$parsed_json && $errors<2) {
+	$json_string = file_get_contents($api_url);
+	$parsed_json = json_decode($json_string);
+	if (!$parsed_json) {
+		$errors++;
+		sleep(2);
+	}
+}
+
+
+$risetime = $parsed_json->{'response'}[0]->{'risetime'};
+$duration = $parsed_json->{'response'}[0]->{'duration'};
+
+echo $risetime . "\n" . $duration . "\n";
+
+send_to_client("s" . $risetime . " " . $duration);
 
 
 ?>
