@@ -23,9 +23,9 @@ if ($argv[1]) {
 }
 
 
-$binaries_dir=$base_dir . "binaries/" . $FROM . "/";
-$cache_dir="/tmp/cache-mirf-" . $FROM . "-files/";
-$cache_file="/tmp/cache-mirf-" . $FROM;
+$binaries_dir=$base_dir . "binaries/" . $from . "/";
+$cache_dir="/tmp/cache-mirf-" . $from . "-files/";
+$cache_file="/tmp/cache-mirf-" . $from;
 $errors=0;
 
 array_shift($argv);
