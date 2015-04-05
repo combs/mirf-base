@@ -64,6 +64,9 @@ function try_cache($the_file, $max_age) {
 	}
 }
 
+function cached_echo($the_string) {
+	file_put_contents($cache_file, $the_string, FILE_APPEND | LOCK_EX);
+	echo ($the_string);
 }
 
 
