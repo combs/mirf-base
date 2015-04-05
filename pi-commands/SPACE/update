@@ -5,13 +5,11 @@ set_include_path($our_include_path);
 require "get-directories.php";
 
 $max_age=30*60; // 30 minutes
-
 try_cache($cache_file, $max_age);
 
 $api_url="http://api.open-notify.org/iss-pass.json?lat=38.939626&lon=-76.990228&n=1&alt=60";
 
-
-while (!$parsed_json && $errors<2) {
+while (!$parsed_json && $errors<3) {
 	$json_string = file_get_contents($api_url);
 	$parsed_json = json_decode($json_string);
 	if (!$parsed_json) {
@@ -20,13 +18,13 @@ while (!$parsed_json && $errors<2) {
 	}
 }
 
+if ($errors>=3) {
+	exit;
+}
 
 $risetime = $parsed_json->{'response'}[0]->{'risetime'};
 $duration = $parsed_json->{'response'}[0]->{'duration'};
 
-echo $risetime . "\n" . $duration . "\n";
-
 send_to_client("s" . $risetime . " " . $duration);
-
 
 ?>
