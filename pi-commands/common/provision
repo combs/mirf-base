@@ -5,8 +5,8 @@ cd `dirname $0`
 # First argument is moved to FROM by get-directories
 NEWNAME="$FROM" 
 PREFIX="FRESH$BASE"
-SETBASE='\$B'
-SETCLIENT='\$C'
+SETBASE='$B'
+SETCLIENT='$C'
 
 if [ "$NEWNAME" = "" ]
 then
@@ -14,7 +14,7 @@ then
 	exit 1
 else
 	echo "$PREFIX$SETBASE$BASE" > $BASEDIR/out/provision1
-	sleep 10
+	sleep 3
 	echo "$PREFIX$SETCLIENT$NEWNAME" > $BASEDIR/out/provision2 
 	exit 0
 fi
