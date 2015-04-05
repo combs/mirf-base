@@ -58,7 +58,6 @@ function try_cache($the_file, $max_age) {
 			// echo "cache too old";
 			unlink($the_file);
 		}
-	
 	} else {
 		// echo "cache doesn't exist";
 	}
@@ -78,6 +77,6 @@ function send_to_client($the_string) {
 
 // Change path and leave
 
-chdir(__DIR__);
+chdir($dir);
 
 ?>
