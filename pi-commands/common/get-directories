@@ -1,5 +1,6 @@
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-BASE=`echo $DIR|sed -e 's:/[^/]*commands/.*::'`
+BASEDIR=`echo $DIR|sed -e 's:/[^/]*commands/.*::'`
 FROM=$1
+BASE=BASES
 shift
 DETAILS="$@" 

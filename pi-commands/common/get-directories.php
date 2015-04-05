@@ -8,6 +8,7 @@ $cache_dir="/tmp/cache-mirf-" . $FROM . "-files/";
 
 $from=$argv[1];
 
+$base="BASES";
 
 $base_dir=preg_replace("/[^\/]*commands\/.*/","",dirname($argv[0]));
 
@@ -22,9 +23,10 @@ $details=$argv;
 
 
 $FROM=&$from;
-$BASE=&$base_dir;
+$BASEDIR=&$base_dir;
 $DIR=&$dir;
 $DETAILS=&$details;
+$BASE=&$base;
 
 
 ?>

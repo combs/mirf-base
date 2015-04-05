@@ -2,7 +2,7 @@
 cd `dirname $0`
 . ../common/get-directories
 
-cd "$BASE/binaries/GIFFR" || exit;
+cd "$BASEDIR/binaries/GIFFR" || exit;
  
 
 SERIAL=`ls -t /dev/tty.usb* /dev/ttyA* 2>/dev/null| grep -v ttyAMA0 | head -1`
