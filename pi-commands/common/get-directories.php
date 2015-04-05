@@ -69,7 +69,9 @@ function cached_echo($the_string) {
 	echo ($the_string);
 }
 
-
+function send_to_client($the_string) {
+	cached_echo($FROM . $BASE . $the_string . "\n");
+}
 
 
 // Change path and leave
