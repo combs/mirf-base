@@ -14,7 +14,7 @@ then
 	exit 1
 else
 	echo "$PREFIX$SETBASE$BASE" > $BASEDIR/out/provision1
-	sleep 3
+	sleep 10
 	echo "$PREFIX$SETCLIENT$NEWNAME" > $BASEDIR/out/provision2 
 	exit 0
 fi
