@@ -66,9 +66,6 @@ $worst_so_far=0;
 $alert_text=""; 
 		
 foreach ($parsed_json->{'alerts'} as $alert) {
-	echo $alert->{'type'};
-	
-	echo $alert_priorities[$alert->{'type'}];		
 	
 	if ($alert_priorities[$alert->{'type'}] > $worst_so_far) {
 		$worst_so_far=$alert_priorities[$alert->{'type'}];
@@ -92,44 +89,44 @@ $output2 = "1";
 
 // Populate variables
 
-$output1 .=  round($temp_f) . chr(223) . " now. " . $temp_low . "-" . $temp_high . chr(223) . "\n";
-$outputNow .=   round($temp_f) . chr(223) . " now. " . "\n";
-$outputLater .=  $temp_low . "-" . $temp_high . chr(223) . "\n";
+$output1 .=  round($temp_f) . chr(223) . " now. " . $temp_low . "-" . $temp_high . chr(223);
+$outputNow .=   round($temp_f) . chr(223) . " now. ";
+$outputLater .=  $temp_low . "-" . $temp_high . chr(223);
 
 
 if ($worst_so_far > 15 ) {
 
 	// If there is a serious alert, use that...
 
-	$outputConditions .= $alert_text . "\n"; 
+	$outputConditions .= $alert_text; 
 			
 } else if ($snow_inches > 0 && $precip_chance > 0 ) {
 	
-	$outputConditions .= round($snow_inches,1) . '" SNOW! (' . $precip_chance . "%)" . "\n";
+	$outputConditions .= round($snow_inches,1) . '" SNOW! (' . $precip_chance . "%)";
 	
 } else if ($rain_inches > 0 && $rain_inches < 0.1 && $precip_chance > 0  ) {
 	
-	$outputConditions .= 'Light mist (' . $precip_chance . "%)" . "\n";
+	$outputConditions .= 'Light mist (' . $precip_chance . "%)";
 
 } else if ($rain_inches > 0.1 && $precip_chance > 0 ) {
 	
-	$outputConditions .= round($rain_inches,1) . '" rain (' . $precip_chance . "%)" . "\n";
+	$outputConditions .= round($rain_inches,1) . '" rain (' . $precip_chance . "%)";
 
 } else if ($humidity > 60)  {
 
-	$outputConditions .=  round($humidity) . "% humidity" . "\n";
+	$outputConditions .=  round($humidity) . "% humidity";
 	
 } else if ($wind > 10)  {
 	
-	$outputConditions .=  round($wind) . "mph wind" . "\n";
+	$outputConditions .=  round($wind) . "mph wind";
 
 } else if ($worst_so_far > 1 ) { // public info advisories, record set, etc.
 
-	$outputConditions .= $alert_text . "\n";
+	$outputConditions .= $alert_text;
 
 } else {
 
-	$outputConditions .=  ucfirst(strtolower(trim($conditions))) . "\n";
+	$outputConditions .=  ucfirst(strtolower(trim($conditions)));
 
 }
 
