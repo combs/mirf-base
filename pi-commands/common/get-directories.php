@@ -1,25 +1,25 @@
 <?php
-chdir(dirname(__FILE__));
 date_default_timezone_set('America/New_York');
 ini_set('default_socket_timeout', 15);
 
 
 $base="BASES";
-$dir=dirname(__FILE__);
+$dir=dirname(realpath($_SERVER["PHP_SELF"]));
+
 if (strpos($argv[0],"commands")) {
 	$base_dir=preg_replace("/[^\/]*commands\/.*/","",dirname($argv[0]));
 } else {
 	$base_dir=dirname($argv[0]) . "/../";
 	if (realpath($base_dir)=="") {
-		$base_dir=".";
+		$base_dir=$dir;
 	}
 	
 }
 
-if ($argv[1]) {
+if ($argv[1] && "$argv[1]" != "") {
 	$from=$argv[1];
 } else {
-	$from=$dir;
+	$from=basename($dir);
 }
 
 
@@ -44,8 +44,7 @@ $BASE=&$base;
 
 // Utility functions
 
-function try_cache($the_file, $max_age) {
-		
+function try_cache($the_file, $max_age) {		
 	if (file_exists($the_file)) {
 		if (time() - filemtime($the_file) < $max_age) {
 			$lines=file($the_file);
@@ -53,17 +52,25 @@ function try_cache($the_file, $max_age) {
 				echo $line;
 				usleep(50000);
 			}
-			exit;
-			
+			exit;			
 		}
 		else {
 			// echo "cache too old";
+			unlink($the_file);
 		}
 	
 	} else {
 		// echo "cache doesn't exist";
 	}
+}
 
 }
+
+
+
+
+// Change path and leave
+
+chdir(__DIR__);
 
 ?>
