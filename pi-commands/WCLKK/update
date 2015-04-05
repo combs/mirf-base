@@ -1,32 +1,13 @@
 #!/usr/bin/php
 <?php
-chdir(dirname(__FILE__));
-date_default_timezone_set('America/New_York');
-ini_set('default_socket_timeout', 15);
+$our_include_path=dirname(__FILE__) . ":" . dirname(__FILE__) . "/../common" . ":~/";
+set_include_path($our_include_path);
+require "get-directories.php";
+
 $parsed_json=null;
-$errors=0;
+
 $max_age=60*30;
-$cache_file="/tmp/cache-mirf-WCLKK";
-
-if (file_exists($cache_file)) {
-	if (time() - filemtime($cache_file) < $max_age) {
-		$lines=file($cache_file);
-		foreach ($lines as $line_num => $line) {
-			echo $line;
-			usleep(50000);
-		}
-		exit;
-		
-	}
-else {
-	// echo "cache too old";
-}
-
-} else {
-	// echo "cache doesn't exist";
-}
-
-
+try_cache($cache_file,$max_age);
 
 $api_key=rtrim(file_get_contents(".wunderground-api-key"));
 if (!$api_key) {
