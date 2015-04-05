@@ -9,7 +9,7 @@ $parsed_json=null;
 $max_age=60*30;
 try_cache($cache_file,$max_age);
 
-$api_key=rtrim(file_get_contents(".wunderground-api-key"),true);
+$api_key=rtrim(file_get_contents(".wunderground-api-key",true));
 if (!$api_key) {
  exit("\nPlease put your Weather Underground API key in .wunderground-api-key\n");
 }
