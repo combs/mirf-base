@@ -65,11 +65,13 @@ function try_cache($the_file, $max_age) {
 }
 
 function cached_echo($the_string) {
+	global $cache_file;
 	file_put_contents($cache_file, $the_string, FILE_APPEND | LOCK_EX);
 	echo ($the_string);
 }
 
 function send_to_client($the_string) {
+	global $FROM, $BASE;
 	cached_echo($FROM . $BASE . $the_string . "\n");
 }
 
