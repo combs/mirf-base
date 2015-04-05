@@ -5,8 +5,8 @@ cd `dirname $0`
 # First argument is moved to FROM by get-directories
 NEWNAME="$FROM" 
 PREFIX="FRESH$BASE"
-SETBASE="\$B"
-SETCLIENT="\$C"
+SETBASE='\$B'
+SETCLIENT='\$C'
 
 if [ "$NEWNAME" = "" ]
 then
