@@ -2,9 +2,19 @@
 cd `dirname $0`
 . ../common/get-directories
 
-echo "FRESHBASES\$C$FROM" > $BASE/out/provision1 
-echo "FRESHBASES\$BBASES" > $BASE/out/provision2
+# First argument is moved to FROM by get-directories
+NEWNAME="$FROM" 
+PREFIX="FRESH$BASE"
+SETBASE="\$B"
+SETCLIENT="\$C"
 
-
-wait
-
+if [ "$NEWNAME" = "" ]
+then
+	echo "Usage: $0 [new-name]"
+	exit 1
+else
+	echo "$PREFIX$SETBASE$BASE" > $BASEDIR/out/provision1
+	sleep 3
+	echo "$PREFIX$SETCLIENT$NEWNAME" > $BASEDIR/out/provision2 
+	exit 0
+fi
