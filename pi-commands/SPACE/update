@@ -10,8 +10,8 @@ require "get-directories.php";
 
 // If a cached result is available, use it instead
 
-$max_age=30*60; // 30 minutes
-try_cache($cache_file, $max_age);
+$max_age_seconds=5*60; // 5 minutes
+try_cache($cache_file, $max_age_seconds);
 
 
 // Retrieve the JSON results
