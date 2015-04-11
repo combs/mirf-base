@@ -128,11 +128,11 @@ void loop()
     else if (isUpdateNeeded() ) {
       stateCurrent=STATE_UPDATE_NEEDED;
     } 
-    else if (isApproaching() ){
-      stateCurrent=STATE_APPROACHING;
-    } 
     else if (isOverhead() ) {
       stateCurrent=STATE_OVERHEAD;
+    } 
+    else if (isApproaching() ){
+      stateCurrent=STATE_APPROACHING;
     } 
     else if (isDeparting() ) {
       stateCurrent=STATE_DEPARTING;
@@ -193,6 +193,7 @@ void loop()
     char theCommand=thePayload[5];
     char theMessage[Payload];
     thePayload.substring(6).toCharArray(theMessage,Payload);
+
     for (byte a=0;a<Payload;a++) {
       if (theMessage[a]=='\r' || theMessage[a]=='\n'){
         theMessage[a]='\0';
@@ -226,11 +227,13 @@ void loop()
         }
         
 
+/*
         char debugMessage[Payload]="";
         ltoa(secondsRise,debugMessage,10);
         SendToBase(debugMessage);
         ltoa(secondsDuration,debugMessage,10);
         SendToBase(debugMessage);
+*/
 
         break;
       }
@@ -272,6 +275,7 @@ void loop()
         }
         if (updateDirty==0) {
           secondsUnixTime=atol(theFirst);
+         // SendToBase(theFirst);
         } 
         else {
           SendToBase("Time-rejected");
