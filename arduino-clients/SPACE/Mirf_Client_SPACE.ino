@@ -214,8 +214,18 @@ void loop()
     case 's':
       // spaaaace 
       {
+        volatile long secondsChecksum = 0L;
+
         secondsRise=atol(strtok(theMessage," "));
         secondsDuration=atol(strtok(NULL," "));
+        secondsChecksum=atol(strtok(NULL," "));
+        
+        if (secondsChecksum != (secondsRise - secondsDuration) ) {
+          secondsRise=0;
+          secondsDuration=0;
+        }
+        
+
         char debugMessage[Payload]="";
         ltoa(secondsRise,debugMessage,10);
         SendToBase(debugMessage);

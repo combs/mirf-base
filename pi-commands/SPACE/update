@@ -36,11 +36,11 @@ if ($errors>=3) {
 
 $risetime = $parsed_json->{'response'}[0]->{'risetime'};
 $duration = $parsed_json->{'response'}[0]->{'duration'};
-
+$checksum = $risetime - $duration;
 
 // Send 
 
-send_to_client("s" . $risetime . " " . $duration);
+send_to_client("s" . $risetime . " " . $duration . " " . $checksum);
 
 
 ?>

@@ -1,9 +1,8 @@
 #!/bin/bash
 cd `dirname $0`
 . ../common/get-directories
-
-# This will break down for half-hour timezone offsets
-LOCALSECONDS=$(expr `date +%z` / 100 \* 60 \* 60 + `date +%s`)
-echo -n $FROM;echo -n $BASE;echo t$LOCALSECONDS\|$LOCALSECONDS
+ 
+SECONDS=`date +%s` 
+echo -n $FROM;echo -n $BASE;echo t$SECONDS\|$SECONDS
 
 
