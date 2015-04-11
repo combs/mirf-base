@@ -41,7 +41,11 @@ $checksum = $risetime - $duration;
 
 // Send 
 
-send_to_client("s" . $risetime . " " . $duration . " " . $checksum);
+if ($risetime > 0 && $duration > 0 && $checksum > 0) {
+	send_to_client("s" . $risetime . " " . $duration . " " . $checksum);
+} else {
+	exit;
+}
 
 
 ?>

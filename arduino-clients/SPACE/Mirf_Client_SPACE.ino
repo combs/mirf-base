@@ -33,9 +33,11 @@ volatile byte updateRequested = true;
 volatile byte paintRequested = true;
 volatile byte sleepRequested = false;
 
-volatile long secondsUnixTime = 1428273062L;
+volatile long secondsUnixTime = 1428000000L;
 volatile long secondsSinceStartup = 0L;
 
+
+volatile long millisZero=0L;
 volatile long secondsGotUpdate = 0L;
 volatile long secondsUpdateRequested = 0L;
 volatile long secondsTimeRequested = 0L;
@@ -132,9 +134,11 @@ void loop()
       stateCurrent=STATE_OVERHEAD;
     } 
     else if (isApproaching() ){
+      millisZero=millis();
       stateCurrent=STATE_APPROACHING;
     } 
     else if (isDeparting() ) {
+      millisZero=millis();
       stateCurrent=STATE_DEPARTING;
     }
     else {
@@ -154,11 +158,15 @@ void loop()
       stateCurrent=STATE_OVERHEAD;
     } 
     else {
-      analogWrite(PIN_OUTPUT,map(30 - (secondsRise - secondsUnixTime),0,30,0,255));
+      long thisTime= ( 30 - (secondsRise - secondsUnixTime) ) * 1000L;
+      thisTime += ((millis() - millisZero) % 1000);
+      
+      analogWrite(PIN_OUTPUT,map(thisTime,0,30000,0,255));
     }
     break;
   case STATE_OVERHEAD :
     if (isDeparting() ) {
+      millisZero=millis();
       stateCurrent=STATE_DEPARTING;
     } 
     else {
@@ -172,7 +180,9 @@ void loop()
       digitalWrite(PIN_OUTPUT,LOW);
     } 
     else {
-      analogWrite(PIN_OUTPUT,map( (  (secondsRise + secondsDuration + 30) - secondsUnixTime),0,30,0,255));
+      long thisTime = (  (secondsRise + secondsDuration + 30) - secondsUnixTime) * 1000L;
+      thisTime +=((millis() - millisZero) % 1000); 
+      analogWrite(PIN_OUTPUT,map(thisTime,0,30000,0,255));
     }
 
     break;
@@ -224,6 +234,8 @@ void loop()
         if (secondsChecksum != (secondsRise - secondsDuration) ) {
           secondsRise=0;
           secondsDuration=0;
+          SendToBase("Checksum-failure");
+          SendToBase(theMessage);
         }
         
 
@@ -330,7 +342,7 @@ byte isOverhead() {
 
 
 byte isTimeNeeded() {
-  if ( secondsSinceStartup % 3600 == 0) {
+  if ( secondsSinceStartup % 3600 == 0 || secondsUnixTime < 1428000000+10) {
     return true;
   } 
   else {
@@ -339,7 +351,7 @@ byte isTimeNeeded() {
 }
 
 byte isUpdateNeeded() {
-  if (  ( secondsUnixTime > (secondsRise + secondsDuration + 30 )) ) {
+  if (  ( secondsUnixTime > (secondsRise + secondsDuration + 30 )) || secondsRise==0 ) {
     return true;
   } 
   else {
