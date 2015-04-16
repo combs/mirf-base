@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <SPI.h>
 #include <Mirf.h>
 #include <Wire.h>
@@ -67,16 +68,20 @@ void setup()
   getNameClient();
   getNameBase();
 
-  pinMode(13,OUTPUT);
-  digitalWrite(13,HIGH);
-  delay(1000);
-  digitalWrite(13,LOW);
-  delay(500);
-  pinMode(2,INPUT);
-
   pinMode(PIN_OUTPUT,OUTPUT); 
   pinMode(PIN_GROUND,OUTPUT);
   digitalWrite(PIN_GROUND,LOW);
+  
+  
+  pinMode(13,OUTPUT);
+  digitalWrite(13,HIGH);
+  digitalWrite(PIN_OUTPUT,HIGH);
+  delay(1000);
+  digitalWrite(13,LOW);
+  digitalWrite(PIN_OUTPUT,LOW);
+  delay(500);
+  pinMode(2,INPUT);
+
 
 
   SetupMirfClient();
