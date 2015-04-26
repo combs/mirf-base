@@ -57,11 +57,11 @@ void setup()
 {
   //  Serial.begin(115200);
   //  Serial.println("hello");
-  pinMode(2,INPUT);
-  pinMode(PIN_NRF,OUTPUT);
-  digitalWrite(PIN_NRF,HIGH);
 
   wdt_disable();
+
+  pinMode(2,INPUT); 
+
   power_adc_disable();
   power_usart0_disable();
 
@@ -71,8 +71,8 @@ void setup()
   pinMode(PIN_OUTPUT,OUTPUT); 
   pinMode(PIN_GROUND,OUTPUT);
   digitalWrite(PIN_GROUND,LOW);
-  
-  
+
+
   pinMode(13,OUTPUT);
   digitalWrite(13,HIGH);
   digitalWrite(PIN_OUTPUT,HIGH);
@@ -83,7 +83,7 @@ void setup()
   pinMode(2,INPUT);
 
 
-
+  wakeRadio();
   SetupMirfClient();
 
   SendToBase("Starting");
@@ -147,7 +147,7 @@ void loop()
       stateCurrent=STATE_DEPARTING;
     }
     else {
-      napping(); 
+      sleeping();
     }
     break;
   case STATE_UPDATE_NEEDED :
@@ -157,15 +157,18 @@ void loop()
     else if (isUpdateRequested()==false) {
       requestUpdate();
     } 
+    else {
+      napping(); 
+    }
+
     break; 
   case STATE_APPROACHING :
     if (isOverhead() ) {
       stateCurrent=STATE_OVERHEAD;
-    } 
+    }     
     else {
       long thisTime= ( 30 - (secondsRise - secondsUnixTime) ) * 1000L;
       thisTime += ((millis() - millisZero) % 1000);
-      
       analogWrite(PIN_OUTPUT,map(thisTime,0,30000,0,255));
     }
     break;
@@ -176,6 +179,7 @@ void loop()
     } 
     else {
       digitalWrite(PIN_OUTPUT,HIGH);
+      napping();
     }
 
     break;
@@ -197,7 +201,10 @@ void loop()
     } 
     else if (isTimeRequested()==false) {
       requestTime();
-    }  
+    } 
+    else {
+      napping(); 
+    }
     break;  
   }
 
@@ -235,22 +242,22 @@ void loop()
         secondsRise=atol(strtok(theMessage," "));
         secondsDuration=atol(strtok(NULL," "));
         secondsChecksum=atol(strtok(NULL," "));
-        
+
         if (secondsChecksum != (secondsRise - secondsDuration) ) {
           secondsRise=0;
           secondsDuration=0;
           SendToBase("Checksum-failure");
           SendToBase(theMessage);
         }
-        
 
-/*
+
+        /*
         char debugMessage[Payload]="";
-        ltoa(secondsRise,debugMessage,10);
-        SendToBase(debugMessage);
-        ltoa(secondsDuration,debugMessage,10);
-        SendToBase(debugMessage);
-*/
+         ltoa(secondsRise,debugMessage,10);
+         SendToBase(debugMessage);
+         ltoa(secondsDuration,debugMessage,10);
+         SendToBase(debugMessage);
+         */
 
         break;
       }
@@ -259,7 +266,7 @@ void loop()
       {
         // unix time
 
-          char theFirst[11];
+        char theFirst[11];
         char theSecond[11];
         byte updateDirty=0;
 
@@ -292,7 +299,7 @@ void loop()
         }
         if (updateDirty==0) {
           secondsUnixTime=atol(theFirst);
-         // SendToBase(theFirst);
+          // SendToBase(theFirst);
         } 
         else {
           SendToBase("Time-rejected");
@@ -315,8 +322,26 @@ void loop()
 
 }
 
+void requestTime() {
+  if ( !digitalRead(PIN_NRF)) {
+    wakeRadio();
+  }
+  SendToBase("get-time");
+  secondsTimeRequested=secondsUnixTime;
+}
+
+void requestUpdate() {
+  if ( !digitalRead(PIN_NRF)) {
+    wakeRadio();
+  }
+  SendToBase("update");
+  secondsUpdateRequested=secondsUnixTime;
+}
+
+
+
 byte isApproaching() {
-  
+
   if ( (secondsRise != 0) && (secondsUnixTime > secondsRise - 30) && (secondsUnixTime < secondsRise)) {
     return true;
   } 
@@ -326,15 +351,6 @@ byte isApproaching() {
 }
 
 
-void requestTime() {
-  SendToBase("get-time");
-  secondsTimeRequested=secondsUnixTime;
-}
-
-void requestUpdate() {
-  SendToBase("update");
-  secondsUpdateRequested=secondsUnixTime;
-}
 
 byte isOverhead() {
   if ( (secondsRise != 0 ) && ( secondsUnixTime >= secondsRise ) && ( secondsUnixTime <= ( secondsRise + secondsDuration ) ) ) {
@@ -366,7 +382,8 @@ byte isUpdateNeeded() {
 
 
 byte isDeparting() {
-  if ( (secondsRise != 0) && (secondsUnixTime > (secondsRise + secondsDuration)) && ( secondsUnixTime < (secondsRise + secondsDuration + 30))) {
+  if ( (secondsRise != 0) && (secondsUnixTime > (secondsRise + secondsDuration)) && 
+    ( secondsUnixTime < (secondsRise + secondsDuration + 30))) {
     return true;
   } 
   else {
@@ -404,12 +421,14 @@ void sleeping() {
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
 
-  Mirf.powerDown(); 
+  sleepRadio();
+
   sleep_enable();
   sei();
   sleep_cpu();
   sleep_disable();
   waking();
+
 
 }
 
@@ -441,6 +460,26 @@ ISR(WDT_vect) {
   secondsUnixTime++;
 
 }
+
+
+
+void wakeRadio() {
+
+  pinMode(PIN_NRF,OUTPUT);  
+  digitalWrite(PIN_NRF,HIGH);
+  SetupMirfClient();
+
+}
+
+
+void sleepRadio() {
+
+  Mirf.powerDown(); 
+  digitalWrite(PIN_NRF,LOW);
+  pinMode(PIN_NRF,INPUT);  
+
+}
+
 
 
 
