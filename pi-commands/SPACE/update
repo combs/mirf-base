@@ -16,7 +16,7 @@ try_cache($cache_file, $max_age_seconds);
 
 // Retrieve the JSON results
 
-$api_url="http://api.open-notify.org/iss-pass.json?lat=38.939626&lon=-76.990228&n=1&alt=60";
+$api_url="http://api.open-notify.org/iss-pass.json?lat=38.939626&lon=-76.990228&n=3&alt=60";
 $parsed_json="";
 
 while (!$parsed_json && $errors<3) {
