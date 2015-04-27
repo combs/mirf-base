@@ -14,36 +14,30 @@ void setup();
 #include "watchdog.h"
 #include "MirfClient.h"
 
-#define STATE_IDLE 0
-#define STATE_UPDATE_NEEDED 1 
-#define STATE_SLEEPING 3
-#define STATE_APPROACHING 4
-#define STATE_OVERHEAD 5
-#define STATE_DEPARTING 6
-#define STATE_TIME_NEEDED 7 
+#define STATE_IDLE 'I'
+#define STATE_UPDATE_NEEDED 'U'
+#define STATE_SLEEPING 'S'
+#define STATE_APPROACHING 'A'
+#define STATE_OVERHEAD 'O'
+#define STATE_DEPARTING 'D'
+#define STATE_TIME_NEEDED 'T' 
 
 
-volatile byte stateCurrent=STATE_TIME_NEEDED;
+volatile char stateCurrent=STATE_TIME_NEEDED;
 
 
 
 #define MIRF_PINS_STANDARD
 // #define MIRF_PINS_PCB
 
-volatile byte updateRequested = true;
-volatile byte paintRequested = true;
-volatile byte sleepRequested = false;
-
 volatile long secondsUnixTime = 1428000000L;
 volatile long secondsSinceStartup = 0L;
 
 
 volatile long millisZero=0L;
-volatile long secondsGotUpdate = 0L;
 volatile long secondsUpdateRequested = 0L;
 volatile long secondsTimeRequested = 0L;
-volatile long secondsTurnedOn = 0L;
-volatile long secondsNapStarted=0L;
+
 
 
 #define PIN_OUTPUT 5
@@ -60,10 +54,8 @@ void setup()
 
   wdt_disable();
 
-  pinMode(2,INPUT); 
-
   power_adc_disable();
-  power_usart0_disable();
+//  power_usart0_disable();
 
   getNameClient();
   getNameBase();
@@ -72,6 +64,7 @@ void setup()
   pinMode(PIN_GROUND,OUTPUT);
   digitalWrite(PIN_GROUND,LOW);
 
+  wakeRadio();
 
   pinMode(13,OUTPUT);
   digitalWrite(13,HIGH);
@@ -80,11 +73,10 @@ void setup()
   digitalWrite(13,LOW);
   digitalWrite(PIN_OUTPUT,LOW);
   delay(500);
-  pinMode(2,INPUT);
 
 
-  wakeRadio();
-  SetupMirfClient();
+  Serial.begin(115200);
+  
 
   SendToBase("Starting");
 
@@ -92,15 +84,6 @@ void setup()
 
   if (status==14) { 
 
-    /*
-    for (byte a=0;a<10;a++) {
-     pinMode(13,OUTPUT);
-     digitalWrite(13,HIGH);
-     delay(200);
-     digitalWrite(13,LOW);
-     delay(200);
-     }
-     */
   } 
   else {  
     while (true) {
@@ -112,12 +95,10 @@ void setup()
     }
   }
 
-
   setup_watchdog(WDTO_1S);
 
-
   SendToBase("Started");
-
+  Serial.println("Started");
 }
 
 
@@ -126,6 +107,8 @@ void loop()
 {
   byte data[Payload];
 
+  Serial.print(stateCurrent);
+  
   switch(stateCurrent) {
   case STATE_IDLE :
   case STATE_SLEEPING : 
@@ -158,6 +141,7 @@ void loop()
       requestUpdate();
     } 
     else {
+      Serial.print("n");
       napping(); 
     }
 
@@ -203,6 +187,7 @@ void loop()
       requestTime();
     } 
     else {
+      Serial.print("n");
       napping(); 
     }
     break;  
@@ -323,7 +308,7 @@ void loop()
 }
 
 void requestTime() {
-  if ( !digitalRead(PIN_NRF)) {
+  if ( digitalRead(PIN_NRF)==LOW) {
     wakeRadio();
   }
   SendToBase("get-time");
@@ -331,7 +316,7 @@ void requestTime() {
 }
 
 void requestUpdate() {
-  if ( !digitalRead(PIN_NRF)) {
+  if ( digitalRead(PIN_NRF)==LOW) {
     wakeRadio();
   }
   SendToBase("update");
@@ -362,8 +347,19 @@ byte isOverhead() {
 }
 
 
+byte isDeparting() {
+  if ( (secondsRise != 0) && (secondsUnixTime > (secondsRise + secondsDuration)) && 
+    ( secondsUnixTime < (secondsRise + secondsDuration + 30))) {
+    return true;
+  } 
+  else {
+    return false;
+  }  
+}
+
+
 byte isTimeNeeded() {
-  if ( secondsSinceStartup % 3600 == 0 || secondsUnixTime < 1428000000+10) {
+  if ( secondsSinceStartup % 3600 == 0 || secondsUnixTime < 1428000000 + 10) {
     return true;
   } 
   else {
@@ -380,16 +376,6 @@ byte isUpdateNeeded() {
   }  
 }
 
-
-byte isDeparting() {
-  if ( (secondsRise != 0) && (secondsUnixTime > (secondsRise + secondsDuration)) && 
-    ( secondsUnixTime < (secondsRise + secondsDuration + 30))) {
-    return true;
-  } 
-  else {
-    return false;
-  }  
-}
 
 
 byte isUpdateRequested() {
@@ -436,7 +422,7 @@ void sleeping() {
 
 void napping() {
 
-  set_sleep_mode(SLEEP_MODE_IDLE);
+  set_sleep_mode(SLEEP_MODE_PWR_SAVE);
   //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
 
   sleep_enable();
@@ -450,8 +436,6 @@ void napping() {
 ISR(WDT_vect) {
 
   if (secondsUnixTime + 1 < secondsUnixTime) {
-    secondsTurnedOn = 0; 
-    secondsGotUpdate = 0;
     secondsUpdateRequested = 0;
     secondsTimeRequested = 0;
   }
@@ -476,9 +460,10 @@ void sleepRadio() {
 
   Mirf.powerDown(); 
   digitalWrite(PIN_NRF,LOW);
-  pinMode(PIN_NRF,INPUT);  
+  //  pinMode(PIN_NRF,INPUT);  
 
 }
+
 
 
 
