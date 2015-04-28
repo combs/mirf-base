@@ -55,7 +55,7 @@ void setup()
   wdt_disable();
 
   power_adc_disable();
-//  power_usart0_disable();
+  //  power_usart0_disable();
 
   getNameClient();
   getNameBase();
@@ -76,7 +76,7 @@ void setup()
 
 
   Serial.begin(115200);
-  
+
 
   SendToBase("Starting");
 
@@ -108,7 +108,7 @@ void loop()
   byte data[Payload];
 
   Serial.print(stateCurrent);
-  
+
   switch(stateCurrent) {
   case STATE_IDLE :
   case STATE_SLEEPING : 
@@ -139,6 +139,8 @@ void loop()
     } 
     else if (isUpdateRequested()==false) {
       requestUpdate();
+      Serial.print("r");
+
     } 
     else {
       Serial.print("n");
@@ -185,6 +187,7 @@ void loop()
     } 
     else if (isTimeRequested()==false) {
       requestTime();
+      Serial.print("r");
     } 
     else {
       Serial.print("n");
@@ -284,7 +287,7 @@ void loop()
         }
         if (updateDirty==0) {
           secondsUnixTime=atol(theFirst);
-          // SendToBase(theFirst);
+          SendToBase(theFirst);
         } 
         else {
           SendToBase("Time-rejected");
@@ -295,6 +298,36 @@ void loop()
     case 'A':  // Ack request; don't print anything
 
       // reset the timeout.
+      break;
+    case 'r': // Send rise time
+      {
+        char theTime[Payload]="rise-";
+        char buffer [sizeof(long)*8+1];
+        ltoa(secondsRise,buffer,10);
+        strcat(theTime,buffer);
+        SendToBase(theTime);
+      }
+
+
+      break;
+
+    case 'u': // Send unix time
+      {
+        char theTime[Payload]="unix-";
+        char buffer [sizeof(long)*8+1];
+        ltoa(secondsUnixTime,buffer,10);
+        strcat(theTime,buffer);
+        SendToBase(theTime);
+      }
+      break;
+
+    case 'c': // Send current state
+      {
+        char theState[8]="state- ";
+        theState[6]=stateCurrent;
+        SendToBase(theState);
+      }
+
       break;
 
 
@@ -308,12 +341,16 @@ void loop()
 }
 
 void requestTime() {
+
   if ( digitalRead(PIN_NRF)==LOW) {
     wakeRadio();
-  }
+    Serial.print("w");  
+}
+  
   SendToBase("get-time");
   secondsTimeRequested=secondsUnixTime;
 }
+
 
 void requestUpdate() {
   if ( digitalRead(PIN_NRF)==LOW) {
@@ -451,6 +488,7 @@ void wakeRadio() {
 
   pinMode(PIN_NRF,OUTPUT);  
   digitalWrite(PIN_NRF,HIGH);
+  delay(200); // Power back up those bypass caps
   SetupMirfClient();
 
 }
@@ -463,6 +501,7 @@ void sleepRadio() {
   //  pinMode(PIN_NRF,INPUT);  
 
 }
+
 
 
 
