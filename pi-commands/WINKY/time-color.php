@@ -10,26 +10,33 @@ $currentHour=date('H');
 $currentMinute=date('i') + $currentHour*60;
 $desiredColor=array(0,0,0);
 $nameClient="WINKY";
- 
 
-if ($currentMinute < 360 || $currentMinute > 1260) {
-} else if ($currentMinute < 540) {	
-	$desiredColor[0]=map($currentMinute,360,540,0,80);
-	$desiredColor[1]=map($currentMinute,360,540,0,80);
-	$desiredColor[2]=map($currentMinute,360,540,0,200);
-} else if ($currentMinute < 840) {
-	$desiredColor[0]=map($currentMinute,540,840,80,255);
-	$desiredColor[1]=map($currentMinute,540,840,80,255);
-	$desiredColor[2]=map($currentMinute,540,840,200,255);
-} else if ($currentMinute < 1020) {
-	$desiredColor[0]=map($currentMinute,840,1020,255,255);
-	$desiredColor[1]=map($currentMinute,840,1020,255,120);
-	$desiredColor[2]=map($currentMinute,840,1020,255,60);
-} else {
-		$desiredColor[0]=map($currentMinute,1020,1260,255,0);
-	$desiredColor[1]=map($currentMinute,1020,1260,120,0);
-	$desiredColor[2]=map($currentMinute,1020,1260,60,0); 
+
+$times=array(0, 360, 540, 840, 1020, 1150, 1260, 1441);
+$colors=array(  array(0,0,0),
+			 	array(0,0,0),
+			 	array(80,80,200),
+			 	array(255,255,255),
+			 	array(255,120,60),
+			 	array(0,0,60),
+			 	array(0,0,0),
+			 	array(0,0,0)
+			 	);
+
+$count=count($times);
+
+for($i=0; $i < ($count - 1); $i++) {
+	if ( $currentMinute < $times[$i+1]   && 
+		($currentMinute > $times[$i] ) 
+		)  {
+		$desiredColor[0]=map($currentMinute,$times[$i],$times[$i+1],$colors[$i][0],$colors[$i+1][0]);
+		$desiredColor[1]=map($currentMinute,$times[$i],$times[$i+1],$colors[$i][1],$colors[$i+1][1]);
+		$desiredColor[2]=map($currentMinute,$times[$i],$times[$i+1],$colors[$i][2],$colors[$i+1][2]);
 	}
+	
+	
+}
+
 
 
 $desiredColor[0]=$desiredColor[0] >> 2;
