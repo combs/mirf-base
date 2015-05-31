@@ -142,7 +142,7 @@ void loop()
       desiredBlue=theMessage[2] - 32;
       currentBlue=desiredBlue=desiredBlue<<2;
       currentMode=MODE_ONE_COLOR;
-    case '
+      
     }
 
 
