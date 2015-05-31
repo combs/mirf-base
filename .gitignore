@@ -41,6 +41,7 @@ last-seen
 # API keys
 
 .wunderground-api-key
+client_secrets.p12
 
 
 .DS_Store
