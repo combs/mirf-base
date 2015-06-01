@@ -37,35 +37,12 @@ for($i=0; $i < ($count - 1); $i++) {
 	
 }
 
-
-
-$desiredColor[0]=$desiredColor[0] >> 2;
-$desiredColor[1]=$desiredColor[1] >> 2;
-$desiredColor[2]=$desiredColor[2] >> 2;
-$desiredColor[0]+=32;
-$desiredColor[1]+=32;
-$desiredColor[2]+=32;
-
 $stringOutput="f";
-$stringOutput.=chr($desiredColor[0]);
-$stringOutput.=chr($desiredColor[1]);
-$stringOutput.=chr($desiredColor[2]);
+$stringOutput.=encodeColor($desiredColor[0]);
+$stringOutput.=encodeColor($desiredColor[1]);
+$stringOutput.=encodeColor($desiredColor[2]);
 send_to_client($stringOutput);
 
-
-function map($value, $fromLow, $fromHigh, $toLow, $toHigh) {
-    $fromRange = $fromHigh - $fromLow;
-    $toRange = $toHigh - $toLow;
-    $scaleFactor = $toRange / $fromRange;
-
-    // Re-zero the value within the from range
-    $tmpValue = $value - $fromLow;
-    // Rescale the value to the to range
-    $tmpValue *= $scaleFactor;
-    // Re-zero back to the to range
-    return $tmpValue + $toLow;
-}
-	
 	
 
 ?>

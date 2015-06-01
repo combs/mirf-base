@@ -76,6 +76,26 @@ function send_to_client($the_string) {
 }
 
 
+function map($value, $fromLow, $fromHigh, $toLow, $toHigh) {
+    $fromRange = $fromHigh - $fromLow;
+    $toRange = $toHigh - $toLow;
+    $scaleFactor = $toRange / $fromRange;
+
+    // Re-zero the value within the from range
+    $tmpValue = $value - $fromLow;
+    // Rescale the value to the to range
+    $tmpValue *= $scaleFactor;
+    // Re-zero back to the to range
+    return $tmpValue + $toLow;
+}
+
+function encodeColor($value) {
+	$value=$value >> 2;
+	$value+=32;
+	return chr($value);
+}
+
+
 // Change path and leave
 
 chdir($dir);
