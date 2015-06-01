@@ -1,7 +1,0 @@
-#!/bin/bash
-cd `dirname $0`
-RED=$1
-GREEN=$2
-BLUE=$3
-. ../common/get-directories 
-php color-gamma.php WINKY $RED $GREEN $BLUE >/tmp/test && mv /tmp/test $BASEDIR/out/WINKY-command

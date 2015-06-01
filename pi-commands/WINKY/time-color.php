@@ -38,9 +38,8 @@ for($i=0; $i < ($count - 1); $i++) {
 }
 
 $stringOutput="f";
-$stringOutput.=encodeColor($desiredColor[0]);
-$stringOutput.=encodeColor($desiredColor[1]);
-$stringOutput.=encodeColor($desiredColor[2]);
+$stringOutput.=encodeColor($desiredColor[0],$desiredColor[1],$desiredColor[2]);
+
 send_to_client($stringOutput);
 
 	

@@ -89,12 +89,20 @@ function map($value, $fromLow, $fromHigh, $toLow, $toHigh) {
     return $tmpValue + $toLow;
 }
 
-function encodeColor($value) {
+function encodeColorChannel($value) {
 	$value=$value >> 2;
 	$value+=32;
 	return chr($value);
 }
 
+function encodeColor($red,$green,$blue) {
+	$text="";
+	$text .= encodeColorChannel($red * 0.8);
+	$text .= encodeColorChannel($green * 1.0);
+	$text .= encodeColorChannel($blue * 0.6);
+	return $text;
+}
+	
 
 // Change path and leave
 
