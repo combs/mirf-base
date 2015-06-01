@@ -1,5 +1,5 @@
 #!/bin/bash
 cd `dirname $0`
 . ../common/get-directories
-
+echo "php color-gamma.php WINKY $1 $2 $3 >/tmp/test && mv /tmp/test $BASEDIR/out/WINKY-command"
 php color-gamma.php WINKY $1 $2 $3 >/tmp/test && mv /tmp/test $BASEDIR/out/WINKY-command
