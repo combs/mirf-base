@@ -15,10 +15,10 @@ $nameClient="WINKY";
 $times=array(0, 330, 420, 840, 1020, 1150, 1260, 1441);
 $colors=array(  array(0,0,0),
 			 	array(0,0,0),
-			 	array(40,80,100),
-			 	array(200,255,180),
-			 	array(255,120,60),
-			 	array(0,0,60),
+			 	array(80,80,150),
+			 	array(255,255,155),
+			 	array(255,200,30),
+			 	array(0,0,30),
 			 	array(0,0,0),
 			 	array(0,0,0)
 			 	);
