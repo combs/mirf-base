@@ -154,7 +154,7 @@ void loop()
     } 
     
     if (isColorVirtual()) {
-       fromRed=currentRed;
+      fromRed=currentRed;
       fromGreen=currentGreen;
       fromBlue=currentBlue; 
     }
@@ -168,63 +168,45 @@ void loop()
 
       break;
     case 'c':
-      toRed=theMessage[0] - 32;
-      fromRed=toRed=toRed<<2;
-      toGreen=theMessage[1] - 32;
-      fromGreen=toGreen=toGreen<<2;
-      toBlue=theMessage[2] - 32;
-      fromBlue=toBlue=toBlue<<2;
+    
+      currentRed=fromRed=toRed=unpack(theMessage[0]);
+      currentGreen=fromGreen=toGreen=unpack(theMessage[1]); 
+      currentBlue=fromBlue=toBlue=unpack(theMessage[2]);
+      
       currentMode=MODE_ONE_COLOR;
+      
       break;
     case 'p':
 
-      toRed=theMessage[0] - 32;
-      toRed=toRed<<2;
-      toGreen=theMessage[1] - 32;
-      toGreen=toGreen<<2;
-      toBlue=theMessage[2] - 32;
-      toBlue=toBlue<<2;
+      toRed=unpack(theMessage[0]);
+      toGreen=unpack(theMessage[1]); 
+      toBlue=unpack(theMessage[2]);
 
-      fromRed=theMessage[3] - 32;
-      fromRed=fromRed<<2;
-      fromGreen=theMessage[4] - 32;
-      fromGreen=fromGreen<<2;
-      fromBlue=theMessage[5] - 32;
-      fromBlue=fromBlue<<2;
+      fromRed=unpack(theMessage[3]);
+      fromGreen=unpack(theMessage[4]);
+      fromBlue=unpack(theMessage[5]);
 
       currentMode=MODE_PULSE;
 
       break;
     case 'f':
-      toRed=theMessage[0] - 32;
-      toRed=toRed<<2;
-      toGreen=theMessage[1] - 32;
-      toGreen=toGreen<<2;
-      toBlue=theMessage[2] - 32;
-      toBlue=toBlue<<2;
- /*     fromRed=currentRed;
-      fromGreen=currentGreen;
-      fromBlue=currentBlue; */
-      char temp[8];
-      itoa(leds[0].red,temp,10);
-      SendToBase(temp);
+      toRed=unpack(theMessage[0]);
+      toGreen=unpack(theMessage[1]); 
+      toBlue=unpack(theMessage[2]);
+      
       currentMode=MODE_FADE;
+      
       millisFadeStarted=millis();
       millisFadeEnds=millisFadeStarted+5000;
 
       break;
     case 'F':
-      toRed=theMessage[0] - 32;
-      toRed=toRed<<2;
-      toGreen=theMessage[1] - 32;
-      toGreen=toGreen<<2;
-      toBlue=theMessage[2] - 32;
-      toBlue=toBlue<<2;
- /*     fromRed=leds[0].red;
-      fromGreen=leds[0].green;
-      fromBlue=leds[0].blue; */
+      toRed=unpack(theMessage[0]);
+      toGreen=unpack(theMessage[1]); 
+      toBlue=unpack(theMessage[2]);
       
       currentMode=MODE_FADE;
+      
       millisFadeStarted=millis();
       millisFadeEnds=millisFadeStarted+30000;
 
@@ -241,7 +223,7 @@ void loop()
     FastLED.showColor(CRGB(0,0,0));
     break;
   case MODE_ONE_COLOR:
-    FastLED.showColor(CRGB(fromRed,fromGreen,fromBlue));
+    FastLED.showColor(CRGB(currentRed,currentGreen,currentBlue));
     break;
   case MODE_PULSE:
     { 
@@ -271,9 +253,9 @@ void loop()
 
       } 
       else {
-        fromRed=toRed;
-        fromGreen=toGreen;
-        fromBlue=toBlue;
+        fromRed=currentRed=toRed;
+        fromGreen=currentGreen=toGreen;
+        fromBlue=currentBlue=toBlue; 
         currentMode=MODE_ONE_COLOR;
       }
     }
@@ -356,6 +338,12 @@ byte isColorVirtual() {
     return true;
   }
 
+}
+
+byte unpack(byte theByte) {
+  theByte -= 32;
+  theByte = theByte << 2;
+  return theByte;  
 }
 
 
