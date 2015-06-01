@@ -40,6 +40,8 @@ volatile byte fromBlue=0;
 volatile byte currentRed=0;
 volatile byte currentGreen=0;
 volatile byte currentBlue=0;
+volatile byte currentSpeed=1; // number of LEDs for each color
+volatile byte currentColors=2; // number of LEDs for each color
 
 byte color0[3]={
   0,0,0};
@@ -57,6 +59,8 @@ byte color6[3]={
   0,0,0};
 byte color7[3]={
   0,0,0};
+
+byte *colors[8]={color0,color1,color2,color3,color4,color5,color6,color7}; 
 
 
 #define MODE_OFF 0
@@ -210,6 +214,32 @@ void loop()
       millisFadeStarted=millis();
       millisFadeEnds=millisFadeStarted+30000;
 
+      break;
+    case 'C':
+      {
+        char theSpeed=theMessage[0];
+        currentSpeed=theSpeed - '0';
+        if (currentSpeed < 1 || currentSpeed > 9) {
+          currentSpeed=1;
+        }
+        for (byte a=1;a*3<Payload-5;a++) {
+          if ((theMessage[a*3]!='\0' && theMessage[a*3]!='\n' && theMessage[a*3]!='\r') &&
+          (theMessage[a*3+1]!='\0' && theMessage[a*3+1]!='\n' && theMessage[a*3+1]!='\r') &&
+          (theMessage[a*3+2]!='\0' && theMessage[a*3+2]!='\n' && theMessage[a*3+2]!='\r')
+          ){
+            colors[a-1][0]=unpack(theMessage[a*3]);
+            colors[a-1][1]=unpack(theMessage[a*3+1]);
+            colors[a-1][2]=unpack(theMessage[a*3+2]);
+            currentColors=a;
+          } else {
+            break;
+          }
+        }
+        
+        currentMode=MODE_CYCLE;
+        
+      }
+      
       break;
     }
 
