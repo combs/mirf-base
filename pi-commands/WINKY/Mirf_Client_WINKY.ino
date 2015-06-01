@@ -26,13 +26,38 @@ volatile long secondsSinceStartup = 0;
 volatile long secondsGotUpdate = 0;
 volatile long secondsRequestedUpdate = 0;
 volatile long secondsTurnedOn = 0;
+volatile long millisFadeStarted=0;
+volatile long millisFadeEnds=0;
 
-volatile byte desiredRed=0;
-volatile byte desiredGreen=0;
-volatile byte desiredBlue=0;
+
+
+volatile byte toRed=0;
+volatile byte toGreen=0;
+volatile byte toBlue=0;
+volatile byte fromRed=0;
+volatile byte fromGreen=0;
+volatile byte fromBlue=0;
 volatile byte currentRed=0;
 volatile byte currentGreen=0;
 volatile byte currentBlue=0;
+
+byte color0[3]={
+  0,0,0};
+byte color1[3]={
+  0,0,0};
+byte color2[3]={
+  0,0,0};
+byte color3[3]={
+  0,0,0};
+byte color4[3]={
+  0,0,0};
+byte color5[3]={
+  0,0,0};
+byte color6[3]={
+  0,0,0};
+byte color7[3]={
+  0,0,0};
+
 
 #define MODE_OFF 0
 #define MODE_ONE_COLOR 1
@@ -44,6 +69,8 @@ volatile byte currentBlue=0;
 #define MODE_CHASE_HARD 7
 #define MODE_SCAN 8
 #define MODE_BLINK 9
+#define MODE_PULSE 10
+#define MODE_FADE 11
 
 volatile byte currentMode=MODE_OFF;
 
@@ -74,7 +101,7 @@ void setup()
   delay(1000);
   digitalWrite(13,LOW);
   delay(500);
- 
+
 
   FastLED.addLeds<NEOPIXEL, PIN_OUTPUT>(leds, NUM_LEDS);
 
@@ -124,8 +151,14 @@ void loop()
       if (theMessage[a]=='\r' || theMessage[a]=='\n'){
         theMessage[a]='\0';
       }
+    } 
+    
+    if (isColorVirtual()) {
+       fromRed=currentRed;
+      fromGreen=currentGreen;
+      fromBlue=currentBlue; 
     }
-
+    
     switch (theCommand) {
 
     case '$':
@@ -135,15 +168,69 @@ void loop()
 
       break;
     case 'c':
-      desiredRed=theMessage[0] - 32;
-      currentRed=desiredRed=desiredRed<<2;
-      desiredGreen=theMessage[1] - 32;
-      currentGreen=desiredGreen=desiredGreen<<2;
-      desiredBlue=theMessage[2] - 32;
-      currentBlue=desiredBlue=desiredBlue<<2;
+      toRed=theMessage[0] - 32;
+      fromRed=toRed=toRed<<2;
+      toGreen=theMessage[1] - 32;
+      fromGreen=toGreen=toGreen<<2;
+      toBlue=theMessage[2] - 32;
+      fromBlue=toBlue=toBlue<<2;
       currentMode=MODE_ONE_COLOR;
+      break;
+    case 'p':
+
+      toRed=theMessage[0] - 32;
+      toRed=toRed<<2;
+      toGreen=theMessage[1] - 32;
+      toGreen=toGreen<<2;
+      toBlue=theMessage[2] - 32;
+      toBlue=toBlue<<2;
+
+      fromRed=theMessage[3] - 32;
+      fromRed=fromRed<<2;
+      fromGreen=theMessage[4] - 32;
+      fromGreen=fromGreen<<2;
+      fromBlue=theMessage[5] - 32;
+      fromBlue=fromBlue<<2;
+
+      currentMode=MODE_PULSE;
+
+      break;
+    case 'f':
+      toRed=theMessage[0] - 32;
+      toRed=toRed<<2;
+      toGreen=theMessage[1] - 32;
+      toGreen=toGreen<<2;
+      toBlue=theMessage[2] - 32;
+      toBlue=toBlue<<2;
+ /*     fromRed=currentRed;
+      fromGreen=currentGreen;
+      fromBlue=currentBlue; */
+      char temp[8];
+      itoa(leds[0].red,temp,10);
+      SendToBase(temp);
+      currentMode=MODE_FADE;
+      millisFadeStarted=millis();
+      millisFadeEnds=millisFadeStarted+5000;
+
+      break;
+    case 'F':
+      toRed=theMessage[0] - 32;
+      toRed=toRed<<2;
+      toGreen=theMessage[1] - 32;
+      toGreen=toGreen<<2;
+      toBlue=theMessage[2] - 32;
+      toBlue=toBlue<<2;
+ /*     fromRed=leds[0].red;
+      fromGreen=leds[0].green;
+      fromBlue=leds[0].blue; */
       
+      currentMode=MODE_FADE;
+      millisFadeStarted=millis();
+      millisFadeEnds=millisFadeStarted+30000;
+
+      break;
     }
+
 
 
   }
@@ -154,8 +241,45 @@ void loop()
     FastLED.showColor(CRGB(0,0,0));
     break;
   case MODE_ONE_COLOR:
-    FastLED.showColor(CRGB(currentRed,currentGreen,currentBlue));
+    FastLED.showColor(CRGB(fromRed,fromGreen,fromBlue));
     break;
+  case MODE_PULSE:
+    { 
+      int position=millis() % 2000;
+      if (position>=1000) {
+        position=2000-position;
+      }
+
+      FastLED.showColor(CRGB(
+      map(position,0,1000,fromRed,toRed),
+      map(position,0,1000,fromGreen,toGreen),
+      map(position,0,1000,fromBlue,toBlue)
+        )); 
+    }
+
+    break;
+
+  case MODE_FADE:
+    {
+      long thisMillis=millis(); 
+      if (thisMillis < millisFadeEnds ) {
+        currentRed=map(thisMillis,millisFadeStarted,millisFadeEnds,fromRed,toRed);
+        currentGreen=map(thisMillis,millisFadeStarted,millisFadeEnds,fromGreen,toGreen);
+        currentBlue=map(thisMillis,millisFadeStarted,millisFadeEnds,fromBlue,toBlue);
+        FastLED.showColor(CRGB(currentRed,currentGreen,currentBlue));
+         
+
+      } 
+      else {
+        fromRed=toRed;
+        fromGreen=toGreen;
+        fromBlue=toBlue;
+        currentMode=MODE_ONE_COLOR;
+      }
+    }
+
+    break;
+
 
   }
 
@@ -225,6 +349,15 @@ ISR(WDT_vect) {
   secondsSinceStartup++; 
 
 }
+
+
+byte isColorVirtual() {
+  if ( currentMode==MODE_PULSE || currentMode==MODE_FADE ) {
+    return true;
+  }
+
+}
+
 
 
 
