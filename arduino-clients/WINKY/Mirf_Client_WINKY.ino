@@ -232,11 +232,12 @@ void loop()
         position=2000-position;
       }
 
-      FastLED.showColor(CRGB(
-      map(position,0,1000,fromRed,toRed),
-      map(position,0,1000,fromGreen,toGreen),
-      map(position,0,1000,fromBlue,toBlue)
-        )); 
+        currentRed=map(position,0,1000,fromRed,toRed);
+        currentGreen=map(position,0,1000,fromGreen,toGreen);
+        currentBlue=map(position,0,1000,fromBlue,toBlue);
+
+        FastLED.showColor(CRGB(currentRed,currentGreen,currentBlue));
+
     }
 
     break;
