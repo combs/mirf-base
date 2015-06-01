@@ -12,11 +12,11 @@ $desiredColor=array(0,0,0);
 $nameClient="WINKY";
 
 
-$times=array(0, 360, 540, 840, 1020, 1150, 1260, 1441);
+$times=array(0, 330, 420, 840, 1020, 1150, 1260, 1441);
 $colors=array(  array(0,0,0),
 			 	array(0,0,0),
-			 	array(80,80,200),
-			 	array(255,255,255),
+			 	array(40,80,100),
+			 	array(255,255,200),
 			 	array(255,120,60),
 			 	array(0,0,60),
 			 	array(0,0,0),
