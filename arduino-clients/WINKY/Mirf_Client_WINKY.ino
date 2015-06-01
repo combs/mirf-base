@@ -60,7 +60,8 @@ byte color6[3]={
 byte color7[3]={
   0,0,0};
 
-byte *colors[8]={color0,color1,color2,color3,color4,color5,color6,color7}; 
+byte *colors[8]={
+  color0,color1,color2,color3,color4,color5,color6,color7}; 
 
 
 #define MODE_OFF 0
@@ -156,13 +157,18 @@ void loop()
         theMessage[a]='\0';
       }
     } 
-    
+
     if (isColorVirtual()) {
       fromRed=currentRed;
       fromGreen=currentGreen;
       fromBlue=currentBlue; 
+
+      for (byte b=1;b<=NUM_LEDS;b++) {
+        leds[b-1]=CRGB(currentRed,currentGreen,currentBlue);
+      }
+
     }
-    
+
     switch (theCommand) {
 
     case '$':
@@ -172,13 +178,13 @@ void loop()
 
       break;
     case 'c':
-    
+
       currentRed=fromRed=toRed=unpack(theMessage[0]);
       currentGreen=fromGreen=toGreen=unpack(theMessage[1]); 
       currentBlue=fromBlue=toBlue=unpack(theMessage[2]);
-      
+
       currentMode=MODE_ONE_COLOR;
-      
+
       break;
     case 'p':
 
@@ -197,9 +203,9 @@ void loop()
       toRed=unpack(theMessage[0]);
       toGreen=unpack(theMessage[1]); 
       toBlue=unpack(theMessage[2]);
-      
+
       currentMode=MODE_FADE;
-      
+
       millisFadeStarted=millis();
       millisFadeEnds=millisFadeStarted+5000;
 
@@ -208,9 +214,9 @@ void loop()
       toRed=unpack(theMessage[0]);
       toGreen=unpack(theMessage[1]); 
       toBlue=unpack(theMessage[2]);
-      
+
       currentMode=MODE_FADE;
-      
+
       millisFadeStarted=millis();
       millisFadeEnds=millisFadeStarted+30000;
 
@@ -222,24 +228,25 @@ void loop()
         if (currentSpeed < 1 || currentSpeed > 9) {
           currentSpeed=1;
         }
-        for (byte a=1;a*3<Payload-5;a++) {
-          if ((theMessage[a*3]!='\0' && theMessage[a*3]!='\n' && theMessage[a*3]!='\r') &&
-          (theMessage[a*3+1]!='\0' && theMessage[a*3+1]!='\n' && theMessage[a*3+1]!='\r') &&
-          (theMessage[a*3+2]!='\0' && theMessage[a*3+2]!='\n' && theMessage[a*3+2]!='\r')
-          ){
-            colors[a-1][0]=unpack(theMessage[a*3]);
-            colors[a-1][1]=unpack(theMessage[a*3+1]);
-            colors[a-1][2]=unpack(theMessage[a*3+2]);
+        for (byte a=0;a*3<Payload-5;a++) {
+          if ((theMessage[a*3+1]!='\0' && theMessage[a*3+1]!='\n' && theMessage[a*3+1]!='\r') &&
+            (theMessage[a*3+2]!='\0' && theMessage[a*3+2]!='\n' && theMessage[a*3+2]!='\r') &&
+            (theMessage[a*3+3]!='\0' && theMessage[a*3+3]!='\n' && theMessage[a*3+3]!='\r')
+            ){
+            colors[a][0]=unpack(theMessage[a*3+1]);
+            colors[a][1]=unpack(theMessage[a*3+2]);
+            colors[a][2]=unpack(theMessage[a*3+3]);
             currentColors=a;
-          } else {
+          } 
+          else {
             break;
           }
         }
-        
+
         currentMode=MODE_CYCLE;
-        
+
       }
-      
+
       break;
     }
 
@@ -250,10 +257,24 @@ void loop()
   switch(currentMode) {
 
   case MODE_OFF:
-    FastLED.showColor(CRGB(0,0,0));
+    currentRed=0;
+    currentGreen=0;
+    currentBlue=0;
+
+    for (byte b=1;b<=NUM_LEDS;b++) {
+      leds[b-1]=CRGB(currentRed,currentGreen,currentBlue);
+    }
+    FastLED.show();
+
+
     break;
   case MODE_ONE_COLOR:
-    FastLED.showColor(CRGB(currentRed,currentGreen,currentBlue));
+
+    for (byte b=1;b<=NUM_LEDS;b++) {
+      leds[b-1]=CRGB(currentRed,currentGreen,currentBlue);
+    }
+    FastLED.show();
+
     break;
   case MODE_PULSE:
     { 
@@ -262,11 +283,11 @@ void loop()
         position=2000-position;
       }
 
-        currentRed=map(position,0,1000,fromRed,toRed);
-        currentGreen=map(position,0,1000,fromGreen,toGreen);
-        currentBlue=map(position,0,1000,fromBlue,toBlue);
+      currentRed=map(position,0,1000,fromRed,toRed);
+      currentGreen=map(position,0,1000,fromGreen,toGreen);
+      currentBlue=map(position,0,1000,fromBlue,toBlue);
 
-        FastLED.showColor(CRGB(currentRed,currentGreen,currentBlue));
+      FastLED.showColor(CRGB(currentRed,currentGreen,currentBlue));
 
     }
 
@@ -280,7 +301,7 @@ void loop()
         currentGreen=map(thisMillis,millisFadeStarted,millisFadeEnds,fromGreen,toGreen);
         currentBlue=map(thisMillis,millisFadeStarted,millisFadeEnds,fromBlue,toBlue);
         FastLED.showColor(CRGB(currentRed,currentGreen,currentBlue));
-         
+
 
       } 
       else {
@@ -292,6 +313,18 @@ void loop()
     }
 
     break;
+  case MODE_CYCLE:
+
+
+    {
+      for (byte b=0;b<NUM_LEDS;b++) {
+        leds[b]=CRGB(colors[b][0],colors[b][1],colors[b][2]);
+      }
+      FastLED.show();
+
+
+    }
+
 
 
   }
@@ -364,6 +397,14 @@ ISR(WDT_vect) {
 }
 
 
+CRGB getCyclePosition(uint16_t thePosition) {
+  
+  
+  
+}
+
+
+
 byte isColorVirtual() {
   if ( currentMode==MODE_PULSE || currentMode==MODE_FADE ) {
     return true;
@@ -376,6 +417,8 @@ byte unpack(byte theByte) {
   theByte = theByte << 2;
   return theByte;  
 }
+
+
 
 
 
