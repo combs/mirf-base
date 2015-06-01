@@ -46,7 +46,7 @@ $desiredColor[0]+=32;
 $desiredColor[1]+=32;
 $desiredColor[2]+=32;
 
-$stringOutput="c";
+$stringOutput="f";
 $stringOutput.=chr($desiredColor[0]);
 $stringOutput.=chr($desiredColor[1]);
 $stringOutput.=chr($desiredColor[2]);
