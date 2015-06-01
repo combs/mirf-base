@@ -107,7 +107,7 @@ void setup()
   delay(500);
 
 
-  FastLED.addLeds<NEOPIXEL, PIN_OUTPUT>(leds, NUM_LEDS);
+  FastLED.addLeds<NEOPIXEL, PIN_OUTPUT>(leds, NUM_LEDS).setCorrection(CRGB(200,255,150));
 
   SendToBase("Starting");
 

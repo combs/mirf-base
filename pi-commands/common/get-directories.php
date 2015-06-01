@@ -97,11 +97,8 @@ function encodeColorChannel($value) {
 
 function encodeColor($red,$green,$blue) {
 	$text="";
-	$text .= encodeColorChannel($red * 0.8);
-	$text .= encodeColorChannel($green * 1.0);
-	if ($blue > 6) {
-		$blue = $blue * 0.6;
-	} 	
+	$text .= encodeColorChannel($red );
+	$text .= encodeColorChannel($green ); 
 	$text .= encodeColorChannel($blue);	
 	return $text;
 }
