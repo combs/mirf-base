@@ -43,9 +43,3 @@ last-seen
 .wunderground-api-key
 client_secrets.p12
 
-
-.DS_Store
-
-pi-commands/.DS_Store
-
-arduino-clients/.DS_Store
