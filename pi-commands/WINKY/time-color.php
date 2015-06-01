@@ -28,7 +28,7 @@ $count=count($times);
 
 for($i=0; $i < ($count - 1); $i++) {
 	if ( $currentMinute < $times[$i+1]   && 
-		($currentMinute > $times[$i] ) 
+		($currentMinute >= $times[$i] ) 
 		)  {
 		$desiredColor[0]=map($currentMinute,$times[$i],$times[$i+1],$colors[$i][0],$colors[$i+1][0]);
 		$desiredColor[1]=map($currentMinute,$times[$i],$times[$i+1],$colors[$i][1],$colors[$i+1][1]);
