@@ -85,14 +85,12 @@ CRGB fromColors[NUM_LEDS];
 
 
 void setup()
-{
-  //  Serial.begin(115200);
-  //  Serial.println("hello");
+{ 
 
   wdt_disable();
 
   power_adc_disable();
-  //  power_usart0_disable();
+  power_usart0_disable();
 
   getNameClient();
   getNameBase();
@@ -160,17 +158,6 @@ void loop()
       }
     } 
 
-    if (isColorVirtual()) {
-      /*
-     fromRed=currentRed;
-       fromGreen=currentGreen;
-       fromBlue=currentBlue; 
-       
-       for (byte b=1;b<=NUM_LEDS;b++) {
-       currentColors[b-1]=CRGB(currentRed,currentGreen,currentBlue);
-       }
-       */
-    }
 
     switch (theCommand) {
 
@@ -252,7 +239,7 @@ void loop()
         memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
 
         millisFadeStarted=millis();
-        millisFadeEnds=millisFadeStarted+5000;
+        millisFadeEnds=millisFadeStarted+(10-currentCycleSpeed)*500;
 
         currentMode=MODE_FADE_INTO_CYCLE;
 
@@ -314,8 +301,6 @@ void loop()
       if (thisMillis < millisFadeEnds ) {
 
         for (byte b=0;b<NUM_LEDS;b++) {
-          // currentColors[b]=CRGB(colors[b][0],colors[b][1],colors[b][2]);
-
           uint16_t thePosition=( ( b*32) % ( (currentCycleColors)*256 ) );
           CRGB scratch=getCyclePosition(thePosition);
 
@@ -475,13 +460,6 @@ CRGB getCyclePosition(uint16_t theCount) {
 
 
 
-byte isColorVirtual() {
-  if ( currentMode==MODE_PULSE || currentMode==MODE_FADE || currentMode==MODE_FADE_INTO_CYCLE || currentMode==MODE_CYCLE ) {
-    return true;
-  }
-
-}
-
 byte unpack(byte theByte) {
   theByte -= 32;
   theByte = theByte << 2;
@@ -491,6 +469,8 @@ byte unpack(byte theByte) {
 
 
 
+
+// bringing this in because the current version in FastLED croaks when b > a
 
 
 // A note on the structure of the lerp functions:
@@ -519,6 +499,7 @@ LIB8STATIC uint8_t superlerp8by8( uint8_t a, uint8_t b, fract8 frac)
   }
   return result;
 }
+
 
 
 
