@@ -27,7 +27,7 @@ volatile long secondsGotUpdate = 0;
 volatile long secondsRequestedUpdate = 0;
 volatile long secondsTurnedOn = 0;
 volatile long millisFadeStarted=0;
-volatile long millisFadeEnds=0;
+volatile long millisFadeEnds=0; 
 
 
 
@@ -40,8 +40,8 @@ volatile byte fromBlue=0;
 volatile byte currentRed=0;
 volatile byte currentGreen=0;
 volatile byte currentBlue=0;
-volatile byte currentSpeed=1; // number of LEDs for each color
-volatile byte currentColors=2; // number of LEDs for each color
+volatile byte currentCycleSpeed=1; // number of LEDs for each color
+volatile byte currentCycleColors=2; // number of LEDs for each color
 
 byte color0[3]={
   0,0,0};
@@ -76,10 +76,12 @@ byte *colors[8]={
 #define MODE_BLINK 9
 #define MODE_PULSE 10
 #define MODE_FADE 11
+#define MODE_FADE_INTO_CYCLE 12
 
 volatile byte currentMode=MODE_OFF;
 
-CRGB leds[NUM_LEDS];
+CRGB currentColors[NUM_LEDS];
+CRGB fromColors[NUM_LEDS];
 
 
 void setup()
@@ -108,7 +110,7 @@ void setup()
   delay(500);
 
 
-  FastLED.addLeds<NEOPIXEL, PIN_OUTPUT>(leds, NUM_LEDS).setCorrection(CRGB(200,255,150));
+  FastLED.addLeds<NEOPIXEL, PIN_OUTPUT>(currentColors, NUM_LEDS).setCorrection(CRGB(200,255,150));
 
   SendToBase("Starting");
 
@@ -159,14 +161,15 @@ void loop()
     } 
 
     if (isColorVirtual()) {
-      fromRed=currentRed;
-      fromGreen=currentGreen;
-      fromBlue=currentBlue; 
-
-      for (byte b=1;b<=NUM_LEDS;b++) {
-        leds[b-1]=CRGB(currentRed,currentGreen,currentBlue);
-      }
-
+      /*
+     fromRed=currentRed;
+       fromGreen=currentGreen;
+       fromBlue=currentBlue; 
+       
+       for (byte b=1;b<=NUM_LEDS;b++) {
+       currentColors[b-1]=CRGB(currentRed,currentGreen,currentBlue);
+       }
+       */
     }
 
     switch (theCommand) {
@@ -203,7 +206,7 @@ void loop()
       toRed=unpack(theMessage[0]);
       toGreen=unpack(theMessage[1]); 
       toBlue=unpack(theMessage[2]);
-
+      memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
       currentMode=MODE_FADE;
 
       millisFadeStarted=millis();
@@ -214,6 +217,7 @@ void loop()
       toRed=unpack(theMessage[0]);
       toGreen=unpack(theMessage[1]); 
       toBlue=unpack(theMessage[2]);
+      memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
 
       currentMode=MODE_FADE;
 
@@ -224,9 +228,9 @@ void loop()
     case 'C':
       {
         char theSpeed=theMessage[0];
-        currentSpeed=theSpeed - '0';
-        if (currentSpeed < 1 || currentSpeed > 9) {
-          currentSpeed=1;
+        currentCycleSpeed=theSpeed - '0';
+        if (currentCycleSpeed < 1 || currentCycleSpeed > 9) {
+          currentCycleSpeed=1;
         }
         for (byte a=0;a*3<Payload-5;a++) {
           if ((theMessage[a*3+1]!='\0' && theMessage[a*3+1]!='\n' && theMessage[a*3+1]!='\r') &&
@@ -236,14 +240,21 @@ void loop()
             colors[a][0]=unpack(theMessage[a*3+1]);
             colors[a][1]=unpack(theMessage[a*3+2]);
             colors[a][2]=unpack(theMessage[a*3+3]);
-            currentColors=a+1;
+            currentCycleColors=a+1;
           } 
           else {
             break;
           }
         }
+        toRed=colors[0][0];
+        toGreen=colors[0][1];
+        toBlue=colors[0][2];
+        memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
 
-        currentMode=MODE_CYCLE;
+        millisFadeStarted=millis();
+        millisFadeEnds=millisFadeStarted+5000;
+
+        currentMode=MODE_FADE_INTO_CYCLE;
 
       }
 
@@ -262,7 +273,7 @@ void loop()
     currentBlue=0;
 
     for (byte b=1;b<=NUM_LEDS;b++) {
-      leds[b-1]=CRGB(currentRed,currentGreen,currentBlue);
+      currentColors[b-1]=CRGB(currentRed,currentGreen,currentBlue);
     }
     FastLED.show();
 
@@ -271,7 +282,7 @@ void loop()
   case MODE_ONE_COLOR:
 
     for (byte b=1;b<=NUM_LEDS;b++) {
-      leds[b-1]=CRGB(currentRed,currentGreen,currentBlue);
+      currentColors[b-1]=CRGB(currentRed,currentGreen,currentBlue);
     }
     FastLED.show();
 
@@ -287,29 +298,72 @@ void loop()
       currentGreen=map(position,0,1000,fromGreen,toGreen);
       currentBlue=map(position,0,1000,fromBlue,toBlue);
 
-      FastLED.showColor(CRGB(currentRed,currentGreen,currentBlue));
+      for (byte b=1;b<=NUM_LEDS;b++) {
+        currentColors[b-1]=CRGB(currentRed,currentGreen,currentBlue);
+      }
+      FastLED.show();
+
+
 
     }
 
+    break;
+  case MODE_FADE_INTO_CYCLE:
+    {
+      long thisMillis=millis(); 
+      if (thisMillis < millisFadeEnds ) {
+
+        for (byte b=0;b<NUM_LEDS;b++) {
+          // currentColors[b]=CRGB(colors[b][0],colors[b][1],colors[b][2]);
+
+          uint16_t thePosition=( ( b*32) % ( (currentCycleColors)*256 ) );
+          CRGB scratch=getCyclePosition(thePosition);
+
+          currentColors[b]=CRGB(map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].red,scratch.red),
+          map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].green,scratch.green),
+          map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].blue,scratch.blue));
+        }
+
+
+        FastLED.show();
+
+      }      
+      else {
+        currentMode=MODE_CYCLE;
+
+      }
+    }
     break;
 
   case MODE_FADE:
     {
       long thisMillis=millis(); 
       if (thisMillis < millisFadeEnds ) {
-        currentRed=map(thisMillis,millisFadeStarted,millisFadeEnds,fromRed,toRed);
-        currentGreen=map(thisMillis,millisFadeStarted,millisFadeEnds,fromGreen,toGreen);
-        currentBlue=map(thisMillis,millisFadeStarted,millisFadeEnds,fromBlue,toBlue);
-        FastLED.showColor(CRGB(currentRed,currentGreen,currentBlue));
+
+        for (byte b=0;b<NUM_LEDS;b++) {
+          currentColors[b]=CRGB(map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].red,toRed),
+          map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].green,toGreen),
+          map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].blue,toBlue));
+
+
+        }
+        FastLED.show();
+
 
 
       } 
       else {
+        for (byte b=0;b<NUM_LEDS;b++) {
+          currentColors[b]=CRGB(toRed,toGreen,toBlue);
+        }
+
         fromRed=currentRed=toRed;
         fromGreen=currentGreen=toGreen;
-        fromBlue=currentBlue=toBlue; 
-        currentMode=MODE_ONE_COLOR;
+        fromBlue=currentBlue=toBlue;  
+        currentMode=MODE_ONE_COLOR; 
+
       }
+
     }
 
     break;
@@ -318,13 +372,13 @@ void loop()
 
     {
       for (byte b=0;b<NUM_LEDS;b++) {
-        leds[b]=CRGB(colors[b][0],colors[b][1],colors[b][2]);
-        
-        uint16_t thePosition=(millis()/ (20-currentSpeed*2) + b*64) % ( (currentColors)*256 );
-        
-        leds[b]=getCyclePosition(thePosition);
-        // leds[b]=getCyclePosition(b*256);
-        
+        currentColors[b]=CRGB(colors[b][0],colors[b][1],colors[b][2]);
+
+        uint16_t thePosition=( ( millis() - millisFadeEnds ) / (20-currentCycleSpeed*2) + b*32) % ( (currentCycleColors)*256 );
+
+        currentColors[b]=getCyclePosition(thePosition);
+        // currentColors[b]=getCyclePosition(b*256);
+
       }
       FastLED.show();
 
@@ -404,25 +458,25 @@ ISR(WDT_vect) {
 
 
 CRGB getCyclePosition(uint16_t theCount) {
-byte theIndex=theCount/256;
-byte thePosition=theCount % 256;
-byte theSecondIndex=theIndex+1;
-if (theSecondIndex>=currentColors-1) {
-  theSecondIndex=theSecondIndex % (currentColors);
-}
- 
-return CRGB(
+  byte theIndex=theCount/256;
+  byte thePosition=theCount % 256;
+  byte theSecondIndex=theIndex+1;
+  if (theSecondIndex>=currentCycleColors-1) {
+    theSecondIndex=theSecondIndex % (currentCycleColors);
+  }
+
+  return CRGB(
   superlerp8by8(colors[theIndex][0],colors[theSecondIndex][0],thePosition),
   superlerp8by8(colors[theIndex][1],colors[theSecondIndex][1],thePosition),
   superlerp8by8(colors[theIndex][2],colors[theSecondIndex][2],thePosition)
-);
-  
+    );
+
 }
 
 
 
 byte isColorVirtual() {
-  if ( currentMode==MODE_PULSE || currentMode==MODE_FADE ) {
+  if ( currentMode==MODE_PULSE || currentMode==MODE_FADE || currentMode==MODE_FADE_INTO_CYCLE || currentMode==MODE_CYCLE ) {
     return true;
   }
 
@@ -438,7 +492,7 @@ byte unpack(byte theByte) {
 
 
 
- 
+
 // A note on the structure of the lerp functions:
 // The cases for b>a and b<=a are handled separately for
 // speed: without knowing the relative order of a and b,
@@ -452,18 +506,23 @@ byte unpack(byte theByte) {
 // with 8-bit fraction
 LIB8STATIC uint8_t superlerp8by8( uint8_t a, uint8_t b, fract8 frac)
 {
-    uint8_t result;
-    if( b > a) {
-        uint8_t delta = b - a;
-        uint8_t scaled = scale8( delta, frac);
-        result = a + scaled;
-    } else {
-        uint8_t delta = a - b;
-        uint8_t scaled = scale8( delta, frac);
-        result = a - scaled;
-    }
-    return result;
+  uint8_t result;
+  if( b > a) {
+    uint8_t delta = b - a;
+    uint8_t scaled = scale8( delta, frac);
+    result = a + scaled;
+  } 
+  else {
+    uint8_t delta = a - b;
+    uint8_t scaled = scale8( delta, frac);
+    result = a - scaled;
+  }
+  return result;
 }
+
+
+
+
 
 
 

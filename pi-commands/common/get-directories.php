@@ -16,7 +16,7 @@ if (strpos($argv[0],"commands")) {
 	
 }
 
-if ($argv[1] && "$argv[1]" != "") {
+if (isset($argv[1]) && "$argv[1]" != "") {
 	$from=$argv[1];
 } else {
 	$from=basename($dir);
