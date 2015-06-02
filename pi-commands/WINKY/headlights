@@ -1,0 +1,6 @@
+#!/bin/bash
+cd `dirname $0`
+. ../common/get-directories
+
+./cycle 7 0 0 0 255 255 255 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
