@@ -29,8 +29,6 @@ volatile long secondsTurnedOn = 0;
 volatile long millisFadeStarted=0;
 volatile long millisFadeEnds=0; 
 
-
-
 volatile byte toRed=0;
 volatile byte toGreen=0;
 volatile byte toBlue=0;
@@ -39,9 +37,10 @@ volatile byte fromGreen=0;
 volatile byte fromBlue=0;
 volatile byte currentRed=0;
 volatile byte currentGreen=0;
-volatile byte currentBlue=0;
-volatile byte currentCycleSpeed=1; // number of LEDs for each color
-volatile byte currentCycleColors=2; // number of LEDs for each color
+volatile byte currentBlue=0; // TODO move these to CRGB arrays?
+
+volatile byte currentCycleSpeed=1; // interval of updates -- high is faster
+volatile byte currentCycleColors=2; // number of received colors
 
 byte color0[3]={
   0,0,0};
@@ -87,7 +86,7 @@ CRGB fromColors[NUM_LEDS];
 void setup()
 { 
 
-  wdt_disable();
+  wdt_disable(); // disable watchdog timer
 
   power_adc_disable();
   power_usart0_disable();
@@ -98,20 +97,10 @@ void setup()
   pinMode(PIN_OUTPUT,OUTPUT); 
   pinMode(PIN_GROUND,OUTPUT);
   digitalWrite(PIN_GROUND,LOW);
-
-  wakeRadio();
-
-  pinMode(13,OUTPUT);
-  digitalWrite(13,HIGH);
-  delay(1000);
-  digitalWrite(13,LOW);
-  delay(500);
-
-
   FastLED.addLeds<NEOPIXEL, PIN_OUTPUT>(currentColors, NUM_LEDS).setCorrection(CRGB(200,255,150));
 
+  wakeRadio();
   SendToBase("Starting");
-
   byte status=Mirf.getStatus(); 
 
   if (status==14) { 
@@ -126,11 +115,11 @@ void setup()
       digitalWrite(13,HIGH);
       FastLED.showColor(CRGB(16,0,0));
 
-      delay(1000);
+      delay(500);
       digitalWrite(13,LOW);
       FastLED.showColor(CRGB(0,0,0));
 
-      delay(500); 
+      delay(200); 
     }
   }
 
