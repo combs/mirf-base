@@ -249,11 +249,11 @@ void loop()
         toRed=colors[0][0];
         toGreen=colors[0][1];
         toBlue=colors[0][2];
-      memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
+        memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
 
         millisFadeStarted=millis();
         millisFadeEnds=millisFadeStarted+5000;
-        
+
         currentMode=MODE_FADE_INTO_CYCLE;
 
       }
@@ -334,7 +334,7 @@ void loop()
       }
     }
     break;
-    
+
   case MODE_FADE:
     {
       long thisMillis=millis(); 
@@ -519,6 +519,7 @@ LIB8STATIC uint8_t superlerp8by8( uint8_t a, uint8_t b, fract8 frac)
   }
   return result;
 }
+
 
 
 
