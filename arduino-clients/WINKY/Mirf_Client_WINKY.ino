@@ -236,7 +236,7 @@ void loop()
             colors[a][0]=unpack(theMessage[a*3+1]);
             colors[a][1]=unpack(theMessage[a*3+2]);
             colors[a][2]=unpack(theMessage[a*3+3]);
-            currentColors=a;
+            currentColors=a+1;
           } 
           else {
             break;
@@ -319,6 +319,12 @@ void loop()
     {
       for (byte b=0;b<NUM_LEDS;b++) {
         leds[b]=CRGB(colors[b][0],colors[b][1],colors[b][2]);
+        
+        uint16_t thePosition=(millis()/ (20-currentSpeed*2) + b*64) % ( (currentColors)*256 );
+        
+        leds[b]=getCyclePosition(thePosition);
+        // leds[b]=getCyclePosition(b*256);
+        
       }
       FastLED.show();
 
@@ -397,9 +403,19 @@ ISR(WDT_vect) {
 }
 
 
-CRGB getCyclePosition(uint16_t thePosition) {
-  
-  
+CRGB getCyclePosition(uint16_t theCount) {
+byte theIndex=theCount/256;
+byte thePosition=theCount % 256;
+byte theSecondIndex=theIndex+1;
+if (theSecondIndex>=currentColors-1) {
+  theSecondIndex=theSecondIndex % (currentColors);
+}
+ 
+return CRGB(
+  superlerp8by8(colors[theIndex][0],colors[theSecondIndex][0],thePosition),
+  superlerp8by8(colors[theIndex][1],colors[theSecondIndex][1],thePosition),
+  superlerp8by8(colors[theIndex][2],colors[theSecondIndex][2],thePosition)
+);
   
 }
 
@@ -422,9 +438,32 @@ byte unpack(byte theByte) {
 
 
 
+ 
+// A note on the structure of the lerp functions:
+// The cases for b>a and b<=a are handled separately for
+// speed: without knowing the relative order of a and b,
+// the value (a-b) might be overflow the width of a or b,
+// and have to be promoted to a wider, slower type.
+// To avoid that, we separate the two cases, and are able
+// to do all the math in the same width as the arguments,
+// which is much faster and smaller on AVR.
 
-
-
+// linear interpolation between two unsigned 8-bit values,
+// with 8-bit fraction
+LIB8STATIC uint8_t superlerp8by8( uint8_t a, uint8_t b, fract8 frac)
+{
+    uint8_t result;
+    if( b > a) {
+        uint8_t delta = b - a;
+        uint8_t scaled = scale8( delta, frac);
+        result = a + scaled;
+    } else {
+        uint8_t delta = a - b;
+        uint8_t scaled = scale8( delta, frac);
+        result = a - scaled;
+    }
+    return result;
+}
 
 
 
