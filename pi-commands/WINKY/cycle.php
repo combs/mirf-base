@@ -13,7 +13,7 @@ $nameClient="WINKY";
 
 $stringOutput="C";
 $stringOutput.=$details[0];
-while ("$details[1]" != "") {
+while (isset($details[1]))  {
 	$stringOutput.=encodeColor($details[1],$details[2],$details[3]);
 	
 	array_shift($details);
