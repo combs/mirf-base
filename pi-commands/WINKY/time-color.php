@@ -38,7 +38,7 @@ for($i=0; $i < ($count - 1); $i++) {
 	
 }
 
-$stringOutput="C1"; // cycle at slowest speed
+$stringOutput="i1"; // cycle at slowest speed
 $stringOutput.=encodeColor($desiredColor[0],$desiredColor[1],$desiredColor[2]);
 $stringOutput.=encodeColor($desiredColor[0]*.98,$desiredColor[1]*.98,$desiredColor[2]*.98);
 $stringOutput.=encodeColor($desiredColor[0],$desiredColor[1],$desiredColor[2]*.96);

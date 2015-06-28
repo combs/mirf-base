@@ -26,6 +26,7 @@ volatile long secondsSinceStartup = 0;
 volatile long secondsGotUpdate = 0;
 volatile long secondsRequestedUpdate = 0;
 volatile long secondsTurnedOn = 0;
+volatile long secondsIdleTime = 300;
 volatile long millisFadeStarted=0;
 volatile long millisFadeEnds=0; 
 
@@ -163,7 +164,8 @@ void loop()
       currentBlue=fromBlue=toBlue=unpack(theMessage[2]);
 
       currentMode=MODE_ONE_COLOR;
-
+      secondsGotUpdate=secondsSinceStartup;
+      
       break;
     case 'p':
 
@@ -174,6 +176,8 @@ void loop()
       fromRed=unpack(theMessage[3]);
       fromGreen=unpack(theMessage[4]);
       fromBlue=unpack(theMessage[5]);
+      secondsGotUpdate=secondsSinceStartup;
+      
 
       currentMode=MODE_PULSE;
 
@@ -184,6 +188,8 @@ void loop()
       toBlue=unpack(theMessage[2]);
       memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
       currentMode=MODE_FADE;
+      secondsGotUpdate=secondsSinceStartup;
+      
 
       millisFadeStarted=millis();
       millisFadeEnds=millisFadeStarted+5000;
@@ -196,12 +202,26 @@ void loop()
       memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
 
       currentMode=MODE_FADE;
+      secondsGotUpdate=secondsSinceStartup;
+      
 
       millisFadeStarted=millis();
       millisFadeEnds=millisFadeStarted+30000;
 
       break;
+      
+    case 'i': // Idle color/animation
+        if (secondsSinceStartup - secondsGotUpdate <= secondsIdleTime) {
+          break;
+        }
+        
+        // and continue...
     case 'C':
+        if(theCommand=='C') {
+          secondsGotUpdate=secondsSinceStartup;
+        }
+        
+        
       {
         char theSpeed=theMessage[0];
         currentCycleSpeed=theSpeed - '0';
@@ -231,6 +251,7 @@ void loop()
         millisFadeEnds=millisFadeStarted+(10-currentCycleSpeed)*500;
 
         currentMode=MODE_FADE_INTO_CYCLE;
+      
 
       }
 
