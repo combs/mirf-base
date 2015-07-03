@@ -40,12 +40,12 @@ for($i=0; $i < ($count - 1); $i++) {
 
 $stringOutput="i1"; // cycle at slowest speed
 $stringOutput.=encodeColor($desiredColor[0],$desiredColor[1],$desiredColor[2]);
-$stringOutput.=encodeColor($desiredColor[0]*.98,$desiredColor[1]*.98,$desiredColor[2]*.98);
-$stringOutput.=encodeColor($desiredColor[0],$desiredColor[1],$desiredColor[2]*.96);
-$stringOutput.=encodeColor($desiredColor[0],$desiredColor[1],$desiredColor[2]*.96);
+$stringOutput.=encodeColor($desiredColor[0]*.98,$desiredColor[1]*.95,$desiredColor[2]*.95);
+$stringOutput.=encodeColor($desiredColor[0],$desiredColor[1],$desiredColor[2]*.92);
+$stringOutput.=encodeColor($desiredColor[0],$desiredColor[1],$desiredColor[2]*.92);
 $stringOutput.=encodeColor($desiredColor[0],$desiredColor[1],$desiredColor[2]);
 $stringOutput.=encodeColor($desiredColor[0],$desiredColor[1],$desiredColor[2]);
-$stringOutput.=encodeColor($desiredColor[0]*.98,$desiredColor[1]*.95,$desiredColor[2]);
+$stringOutput.=encodeColor($desiredColor[0]*.94,$desiredColor[1]*.92,$desiredColor[2]);
 $stringOutput.=encodeColor($desiredColor[0],$desiredColor[1],$desiredColor[2]);
 
 send_to_client($stringOutput);
