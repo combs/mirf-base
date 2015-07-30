@@ -213,7 +213,7 @@ echo("<!DOCTYPE html>
         color-stop(100%, rgba(255, 0, 0, 1)));
         
         ;padding:1em .5em;'>🌈🌈🌈 Every color hooray! 🌈🌈🌈</h1></div><div class='row'><div class='center-block main-movie-magic' style=''>
-	<div class='panel panel-default'><div class='panel-heading text-center'> Pick it pick it </div><div class='panel-body text-center'><form name='lizards' action='color.php' method='get'>Speed (for color cycling modes):<br/>Slow 
+	<div class='panel panel-default'><div class='panel-heading text-center'> Pick it pick it </div><div class='panel-body text-center'><form action='color.php' method='GET'><input type='hidden' name='random' value='1'><input type='submit' value='✨🌈 RANDOM! 🌈✨'></form><br/><br/><form name='lizards' action='color.php' method='get'>Speed (for color cycling modes):<br/>Slow 
 ");
 for ($b=1;$b<10;$b++) {
 	echo("<input type='radio' name='speed' value='" . $b . "' " );
@@ -255,7 +255,7 @@ foreach(glob($data_dir . "/*.txt") as $thisone) {
 
  
  
- echo(" <br/><br/>command: <pre style='border: 2px solid grey'>" . $command . "</pre><br/><br/><form action='color.php' method='GET'><input type='hidden' name='random' value='1'><input type='submit' value='✨🌈 RANDOM! 🌈✨'></form></div></div></div>
+ echo(" <br/><br/>command: <pre style='border: 2px solid grey'>" . $command . "</pre><br/><br/></div></div></div>
 	</div>
 	
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js'></script>
