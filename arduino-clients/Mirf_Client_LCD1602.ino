@@ -139,6 +139,52 @@ void flagUpdate() {
 }
 
 
+
+
+byte isUpdateTimedOut() {
+
+  return secondsSinceStartup - secondsRequestedUpdate > 
+        secondsTimeout+secondsTimeout ;
+        
+}
+
+byte isUpdateNotYetTimedOut() {
+
+  return secondsSinceStartup - secondsRequestedUpdate <  
+    secondsTimeout+secondsTimeout;
+    
+}
+
+byte isFirstUpdateNeeded() {
+
+  return (secondsGotUpdate==0 && secondsRequestedUpdate==0);
+
+}
+
+byte isUpdateTooOld() {
+
+  return  ( secondsSinceStartup - secondsGotUpdate ) > secondsMaxDataAge;
+  
+}
+
+byte isUpdateRequested() {
+  
+  return ( secondsSinceStartup - secondsRequestedUpdate ) <= secondsTimeout;
+
+}
+
+byte isUpdateReceived() {
+
+  return (secondsGotUpdate >= secondsRequestedUpdate) ;
+  
+}
+byte isScreenTimeOver() {
+
+  return secondsSinceStartup - secondsTurnedOn > secondsScreenAwakeTime;
+
+}
+
+
 void loop()
 {
 
@@ -152,7 +198,7 @@ void loop()
   }
 
 
-  if (secondsSinceStartup - secondsTurnedOn > secondsScreenAwakeTime ) {
+  if ( isScreenTimeOver() ) {
 #ifdef LCD_CLEAR_ON_SLEEP
     myLCDClear();
 #endif
@@ -167,8 +213,7 @@ void loop()
 
     Mirf.powerUpRx();
 
-    if ( ( ( secondsSinceStartup - secondsGotUpdate ) > secondsMaxDataAge ) && 
-      ( ( secondsSinceStartup - secondsRequestedUpdate ) > secondsTimeout ) ) {
+    if (  isUpdateTooOld() &&  !isUpdateRequested() ) {
       secondsRequestedUpdate=secondsSinceStartup;
       // ,"Refresh");
       requestUpdate();
@@ -187,10 +232,8 @@ void loop()
 
       updateRequested=false;
 
-      if  ( ( ( secondsSinceStartup - secondsRequestedUpdate > 
-        secondsTimeout+secondsTimeout ) || 
-        (secondsGotUpdate==0 && secondsRequestedUpdate==0))  &&  
-        ( ( secondsSinceStartup - secondsGotUpdate > secondsMaxDataAge ) || 
+      if  ( ( isUpdateTimedOut() ||  isFirstUpdateNeeded() )  &&  
+        ( isUpdateTooOld()  || 
         secondsGotUpdate==0)) {
 
         secondsRequestedUpdate=secondsSinceStartup;
@@ -199,7 +242,7 @@ void loop()
       } 
 
     }
-    if ((secondsSinceStartup - secondsRequestedUpdate > secondsTimeout ) && (secondsSinceStartup - secondsRequestedUpdate < ( secondsTimeout+secondsTimeout ) ) && (secondsSinceStartup - secondsGotUpdate > secondsTimeout+secondsTimeout ) ) {
+    if ( !isUpdateReceived() && isUpdateTimedOut() ) {
 
       SendToBase("Timeout");
       secondsRequestedUpdate=secondsSinceStartup;
@@ -264,6 +307,7 @@ void loop()
         strcpy(stringUpdateConditions,theMessage);
         x=0;
         y=1;
+        length=16;
         break;
       case 'N': // temp Now
         secondsGotUpdate = secondsSinceStartup;
@@ -313,8 +357,7 @@ void loop()
     }
   }
 
-  if (secondsSinceStartup - secondsRequestedUpdate <  
-    secondsTimeout+secondsTimeout ) {
+  if (isUpdateNotYetTimedOut() ) {
     delay(50);
   } 
   else {
@@ -351,7 +394,7 @@ void serialEvent() {
 void paintScreen() {
 #ifdef LCD_CLEAR_ON_SLEEP
 
-  if (secondsSinceStartup - secondsGotUpdate > secondsMaxDataAge) {
+  if (isUpdateTooOld()) {
     myLCDClear();
     return;
   }
@@ -478,13 +521,6 @@ ISR(WDT_vect) {
   secondsSinceStartup++;
 
 }
-
-
-
-
-
-
-
 
 
 
