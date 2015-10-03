@@ -2,7 +2,7 @@
 cd `dirname $0`
 . ../common/get-directories
 
-ping -q -c 1 comcast.com >/dev/null 2>/dev/null
+ping -q -c 1 bing.com >/dev/null 2>/dev/null
 if [ $? -gt 0 ] 
 then
 
