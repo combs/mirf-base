@@ -114,7 +114,7 @@ while read TO FROM DATA DETAILS; do
 			
 			for FILE in $OUTFILES
 				do
-				cat "$FILE" && cat "$FILE" >&3 && rm "$FILE" && sleep 0.02
+				cat "$FILE" && cat "$FILE" >&3 && rm "$FILE" && sleep 0.01
 				done
 		fi
 		NAMEDOUTFILES=`find /var/local/nrf24/out -maxdepth 2 -mindepth 2 -type f`
@@ -123,7 +123,7 @@ while read TO FROM DATA DETAILS; do
 			
 			for FILE in $NAMEDOUTFILES
 				do
-				cat "$FILE" && echo -n "`dirname $FILE | sed s:.*/::`BASES" >&3 && cat "$FILE" >&3 && rm "$FILE" && sleep 0.02
+				cat "$FILE" && echo -n "`dirname $FILE | sed s:.*/::`BASES" >&3 && cat "$FILE" >&3 && rm "$FILE" && sleep 0.01
 				done
 		fi
 	else 
@@ -138,7 +138,6 @@ done <&3 || INITIALIZED=false && echo "Error contacting base station. Message tr
 # look for things to send
 
 
-sleep 0.1
 exec 3>&-
 
 
