@@ -6,6 +6,7 @@ BASE=/var/local/nrf24
 while sleep 2; do
 SERIAL=`ls -t /dev/tty.usb* /dev/ttyA* 2>/dev/null| grep -v ttyAMA0 | head -1`
 echo "using $SERIAL" 
+ln -sf $SERIAL /dev/mirf
 if [ `uname` != "Darwin" ]
 then
 
