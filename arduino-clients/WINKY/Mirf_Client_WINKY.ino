@@ -70,14 +70,19 @@ byte *colors[8]={
 #define MODE_WIPE 2
 #define MODE_CYCLE_FAST 3
 #define MODE_CYCLE 4
-#define MODE_CYCLE_SLOW 5
-#define MODE_CHASE_SOFT 6
-#define MODE_CHASE_HARD 7
-#define MODE_SCAN 8
-#define MODE_BLINK 9
-#define MODE_PULSE 10
-#define MODE_FADE 11
-#define MODE_FADE_INTO_CYCLE 12
+#define MODE_FADE_INTO_CYCLE 5
+#define MODE_CYCLE_SLOW 6
+#define MODE_CHASE_SOFT 7
+#define MODE_CHASE_HARD 8
+#define MODE_SCAN 9
+#define MODE_BLINK 10
+#define MODE_PULSE 11
+#define MODE_FADE 12
+#define MODE_SET_ARRAY 13
+#define MODE_FADE_INTO_SET_ARRAY 14
+#define MODE_SET_ARRAY_PIXELS 15
+#define MODE_FADE_INTO_SET_ARRAY_PIXELS 16
+
 
 volatile byte currentMode=MODE_OFF;
 
@@ -166,7 +171,7 @@ void loop()
 
       currentMode=MODE_ONE_COLOR;
       secondsGotUpdate=secondsSinceStartup;
-      
+
       break;
     case 'p':
 
@@ -178,7 +183,7 @@ void loop()
       fromGreen=unpack(theMessage[4]);
       fromBlue=unpack(theMessage[5]);
       secondsGotUpdate=secondsSinceStartup;
-      
+
 
       currentMode=MODE_PULSE;
 
@@ -190,7 +195,7 @@ void loop()
       memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
       currentMode=MODE_FADE;
       secondsGotUpdate=secondsSinceStartup;
-      
+
 
       millisFadeStarted=millis();
       millisFadeEnds=millisFadeStarted+5000;
@@ -204,25 +209,40 @@ void loop()
 
       currentMode=MODE_FADE;
       secondsGotUpdate=secondsSinceStartup;
-      
+
 
       millisFadeStarted=millis();
       millisFadeEnds=millisFadeStarted+30000;
 
       break;
-      
+
     case 'i': // Idle color/animation
-        if (secondsSinceStartup - secondsGotUpdate <= secondsIdleTime) {
-          break;
-        }
+      if (secondsSinceStartup - secondsGotUpdate <= secondsIdleTime) {
+        break;
+      }
+
+      // and continue...
+
+    case 'm':
+      {
+        char theDebug[8]="000";
+        itoa(currentMode,theDebug,10);
+        SendToBase(theDebug);
         
-        // and continue...
-    case 'C':
-        if(theCommand=='C') {
-          secondsGotUpdate=secondsSinceStartup;
-        }
-        
-        
+      }
+      break;
+    
+    
+    case 'a': // Setting the whole array
+    case 'A': // Fade into setting the whole array
+    case 'x': // Set the whole array with hard pixel boundaries
+    case 'X': // Fade the whole array with hard pixel boundaries
+    case 'C': // Color cycling
+      if(theCommand!='i') {
+        secondsGotUpdate=secondsSinceStartup;
+      }
+
+
       {
         char theSpeed=theMessage[0];
         currentCycleSpeed=theSpeed - '0';
@@ -251,8 +271,35 @@ void loop()
         millisFadeStarted=millis();
         millisFadeEnds=millisFadeStarted+(10-currentCycleSpeed)*500;
 
-        currentMode=MODE_FADE_INTO_CYCLE;
-      
+        if (theCommand=='C') {
+
+          currentMode=MODE_FADE_INTO_CYCLE;
+
+        } 
+        else if (theCommand=='A') {
+
+          currentMode=MODE_FADE_INTO_SET_ARRAY;
+
+        }
+
+        else if (theCommand=='a') {
+
+          currentMode=MODE_SET_ARRAY;
+
+        }
+
+        else if (theCommand=='X') {
+
+          currentMode=MODE_FADE_INTO_SET_ARRAY_PIXELS;
+
+        }
+
+        else if (theCommand=='x') {
+
+          currentMode=MODE_SET_ARRAY_PIXELS;
+
+        }
+
 
       }
 
@@ -306,16 +353,45 @@ void loop()
     }
 
     break;
+  case MODE_FADE_INTO_SET_ARRAY_PIXELS:
+  case MODE_FADE_INTO_SET_ARRAY:
   case MODE_FADE_INTO_CYCLE:
     {
       long thisMillis=millis(); 
       if (thisMillis < millisFadeEnds ) {
 
         for (byte b=0;b<NUM_LEDS;b++) {
-          CRGB scratch=getCyclePosition(thePosition);
 
           uint16_t thePosition;
+          if (currentMode==MODE_FADE_INTO_CYCLE) {
+
             thePosition=( ( b * CYCLE_MULTIPLIER) % ( (currentCycleColors)*256 ) );
+          } 
+          else if (currentMode==MODE_FADE_INTO_SET_ARRAY) {
+            
+            thePosition=map(b,(NUM_LEDS-1)*0,(NUM_LEDS - 1)*1,0,(currentCycleColors+1)*256) ;
+            thePosition=constrain(thePosition,256,currentCycleColors*256);
+            thePosition-=256;
+            
+          } 
+          else if (currentMode==MODE_FADE_INTO_SET_ARRAY_PIXELS) {
+
+          
+
+          }
+
+          CRGB scratch;
+          
+          if (currentMode==MODE_FADE_INTO_SET_ARRAY_PIXELS) {
+          
+            scratch=getPixelAbsolute(b);
+            
+          } else {
+            
+            scratch=getCyclePosition(thePosition);
+          
+          }
+          
           currentColors[b]=CRGB(map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].red,scratch.red),
           map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].green,scratch.green),
           map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].blue,scratch.blue));
@@ -326,11 +402,55 @@ void loop()
 
       }      
       else {
-        currentMode=MODE_CYCLE;
+        if (currentMode==MODE_FADE_INTO_CYCLE) {
 
+          currentMode=MODE_CYCLE;
+        } 
+        else if (currentMode==MODE_FADE_INTO_SET_ARRAY) {
+
+          currentMode=MODE_SET_ARRAY;
+
+        }
+
+        else if (currentMode==MODE_FADE_INTO_SET_ARRAY_PIXELS) {
+
+          currentMode=MODE_SET_ARRAY_PIXELS;
+
+        }
       }
     }
     break;
+
+  case MODE_SET_ARRAY:
+
+    {
+      
+      for (byte b=0;b<NUM_LEDS;b++) { 
+        uint16_t thePosition=map(b,(NUM_LEDS-1)*0,(NUM_LEDS - 1)*1,0,(currentCycleColors+1)*256) ;
+        thePosition=constrain(thePosition,256,currentCycleColors*256);
+        thePosition-=256;
+        currentColors[b]=getCyclePosition(thePosition);
+      }
+      FastLED.show(); 
+
+    }
+    break;
+
+  case MODE_SET_ARRAY_PIXELS:
+
+    { 
+
+      for (byte c=0;c<NUM_LEDS;c++) {
+        
+        currentColors[c]=getPixelAbsolute(c);
+        
+      }
+      
+      FastLED.show();  
+
+    }
+    break;
+
 
   case MODE_FADE:
     {
@@ -384,6 +504,7 @@ void loop()
 
 
 
+    break;
   }
 
 
@@ -470,6 +591,32 @@ CRGB getCyclePosition(uint16_t theCount) {
 
 }
 
+CRGB getPixelPosition(uint16_t theCount) {
+  
+  byte theIndex=theCount/256;
+  byte thePosition=theCount % 256;
+  byte theSecondIndex=theIndex+1;
+  if (theSecondIndex>=currentCycleColors-1) {
+    theSecondIndex=theSecondIndex % (currentCycleColors);
+  }
+  return CRGB(colors[theIndex][0],colors[theIndex][1],colors[theIndex][2]);
+}
+
+
+CRGB getPixelAbsolute(byte thePixel) {
+   
+  long theIndex=map(thePixel,0,NUM_LEDS,0,currentCycleColors);
+ 
+ /* char theDebug[8]="000";
+  itoa(colors[theIndex][0],theDebug,10);
+  SendToBase(theDebug);
+  */
+  
+  // return CRGB(thePixel,thePixel,thePixel);
+  //  return CRGB(theIndex,theIndex,theIndex);
+  return CRGB(colors[theIndex][0],colors[theIndex][1],colors[theIndex][2]);
+  
+}
 
 
 byte unpack(byte theByte) {
@@ -511,6 +658,11 @@ LIB8STATIC uint8_t superlerp8by8( uint8_t a, uint8_t b, fract8 frac)
   }
   return result;
 }
+
+
+
+
+
 
 
 
