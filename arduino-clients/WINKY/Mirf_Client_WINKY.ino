@@ -20,7 +20,8 @@ void setup();
 #define PIN_GROUND 4
 #define PIN_NRF A3
 
-#define NUM_LEDS 7
+const byte NUM_LEDS = 128;
+#define CYCLE_MULTIPLIER 1 // make this larger for short strips
 
 volatile long secondsSinceStartup = 0;
 volatile long secondsGotUpdate = 0;
@@ -98,7 +99,7 @@ void setup()
   pinMode(PIN_OUTPUT,OUTPUT); 
   pinMode(PIN_GROUND,OUTPUT);
   digitalWrite(PIN_GROUND,LOW);
-  FastLED.addLeds<NEOPIXEL, PIN_OUTPUT>(currentColors, NUM_LEDS).setCorrection(CRGB(200,255,150));
+  FastLED.addLeds<NEOPIXEL, PIN_OUTPUT>(currentColors, NUM_LEDS).setCorrection(CRGB(255,255,150));
 
   wakeRadio();
   SendToBase("Starting");
@@ -311,9 +312,10 @@ void loop()
       if (thisMillis < millisFadeEnds ) {
 
         for (byte b=0;b<NUM_LEDS;b++) {
-          uint16_t thePosition=( ( b*32) % ( (currentCycleColors)*256 ) );
           CRGB scratch=getCyclePosition(thePosition);
 
+          uint16_t thePosition;
+            thePosition=( ( b * CYCLE_MULTIPLIER) % ( (currentCycleColors)*256 ) );
           currentColors[b]=CRGB(map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].red,scratch.red),
           map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].green,scratch.green),
           map(thisMillis,millisFadeStarted,millisFadeEnds,fromColors[b].blue,scratch.blue));
@@ -369,7 +371,7 @@ void loop()
       for (byte b=0;b<NUM_LEDS;b++) {
         currentColors[b]=CRGB(colors[b][0],colors[b][1],colors[b][2]);
 
-        uint16_t thePosition=( ( millis() - millisFadeEnds ) / (20-currentCycleSpeed*2) + b*32) % ( (currentCycleColors)*256 );
+        uint16_t thePosition=( ( millis() - millisFadeEnds ) / (20-currentCycleSpeed*2) + b*CYCLE_MULTIPLIER) % ( (currentCycleColors)*256 );
 
         currentColors[b]=getCyclePosition(thePosition);
         // currentColors[b]=getCyclePosition(b*256);
