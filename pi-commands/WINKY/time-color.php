@@ -6,6 +6,8 @@ $our_include_path=dirname(__FILE__) . ":" . dirname(__FILE__) . "/../common" . "
 set_include_path($our_include_path);
 require "get-directories.php";
 
+try_cache($cache_file,30);
+
 $currentHour=date('H');
 $currentMinute=date('i') + $currentHour*60;
 $desiredColor=array(0,0,0);
