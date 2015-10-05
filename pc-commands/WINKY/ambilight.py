@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
+import sched, time, sys, socket, os
+from paramiko import SSHClient
 from PIL import ImageGrab,Image,ImageStat
 from pprint import pprint
-import sched, time, sys, socket
-from paramiko import SSHClient
 from scp import SCPClient
 
 
@@ -42,39 +42,63 @@ ssh.load_system_host_keys()
 ssh.connect("raspbmc.local",username="pi")
 scp = SCPClient(ssh.get_transport())
 
+iterator=99
+enabled=1
 
 def doLoop(sc) :
-	colors = [0 for i in xrange(ourStrip)] 
-	colorCommand="WINKYBASESA9"
-	try:
-		ourImage=ImageGrab.grab(bbox=(0,00,ourScreenWidth,100))
-	except:
-		print "capture yacked"
+	global iterator
+	global enabled
+	global ourScreenWidth
 	
-	for chunk in reversed(range(len(colors))):
-		colors[chunk]=getChunk(chunk,ourImage)
-		if colors[chunk][3]==0:
-			print "screen width changed, got transparent area"
-			ourWidth=ImageGrab.grab().size[0]
-			colors[chunk]=getChunk(chunk)
-		colorCommand=colorCommand + encodeColor(colors[chunk][0],colors[chunk][1],colors[chunk][2])
-	colorCommand=colorCommand + "\n\r"
-#	fileOut = open("/tmp/ambilight","w+")
-#	fileOut.write(colorCommand)
-#	fileOut.close()
+	iterator += 1
+	
+	if (iterator==100):
+		if (os.name=="posix"):
+			if (os.system("system_profiler SPDisplaysDataType | grep -Ei 'toshiba|argley'")>0) :
+				enabled=0
+			else:
+				enabled=1
+		else:
+			enabled=1
+				
+		ourScreenWidth=ImageGrab.grab().size[0]
 
-	colorCommand = colorCommand.replace("\"", r"\"")
- 	print "echo -n \"" + colorCommand + "\">/var/local/nrf24/out/ambilight"
- 	
-	try:
-		ssh.exec_command("echo -n \"" + colorCommand + "\">/var/local/nrf24/out/ambilight")
+	if (enabled):
+				
+		sc.enter(0.25, 1, doLoop, (sc,))
+		colors = [0 for i in xrange(ourStrip)] 
+		colorCommand="WINKYBASESA9"
+		ourImage=Image
+				
+		try:
+			ourImage=ImageGrab.grab(bbox=(0,00,ourScreenWidth,100))
+				
+			for chunk in reversed(range(len(colors))):
+				colors[chunk]=getChunk(chunk,ourImage)
+				if colors[chunk][3]==0:
+					print "screen width changed, got transparent area"
+					ourWidth=ImageGrab.grab().size[0]
+					colors[chunk]=getChunk(chunk)
+				colorCommand=colorCommand + encodeColor(colors[chunk][0],colors[chunk][1],colors[chunk][2])
+		#	colorCommand=colorCommand + "\n\r"
+
+		except:
+			print "capture yacked"
+			#	fileOut = open("/tmp/ambilight","w+")
+	#	fileOut.write(colorCommand)
+	#	fileOut.close()
+	
+		colorCommand = colorCommand.replace("\"", r"\"")
+	 	print "echo \"" + colorCommand + "\">/var/local/nrf24/out/ambilight"
+	 	
+		try:
+			ssh.exec_command("echo \"" + colorCommand + "\">/var/local/nrf24/out/ambilight")
+			
+	#		scp.put("/tmp/ambilight","/var/local/nrf24/out/ambilight")
+		except socket.error as e:
+			ssh.connect("raspbmc.local",username="pi")
 		
-#		scp.put("/tmp/ambilight","/var/local/nrf24/out/ambilight")
-	except socket.error as e:
-		ssh.connect("raspbmc.local",username="pi")
-	
-	sc.enter(0.25, 1, doLoop, (sc,))
-	
+
 
 s.enter(0.25, 1, doLoop, (s,))
 s.run()
