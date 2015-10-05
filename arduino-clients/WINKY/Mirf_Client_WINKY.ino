@@ -216,12 +216,6 @@ void loop()
 
       break;
 
-    case 'i': // Idle color/animation
-      if (secondsSinceStartup - secondsGotUpdate <= secondsIdleTime) {
-        break;
-      }
-
-      // and continue...
 
     case 'm':
       {
@@ -232,6 +226,13 @@ void loop()
       }
       break;
     
+    case 'i': // Idle color/animation
+      if (secondsSinceStartup - secondsGotUpdate <= secondsIdleTime) {
+        break;
+      }
+
+      // and continue...
+
     
     case 'a': // Setting the whole array
     case 'A': // Fade into setting the whole array
@@ -269,9 +270,9 @@ void loop()
         memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
 
         millisFadeStarted=millis();
-        millisFadeEnds=millisFadeStarted+(10-currentCycleSpeed)*500;
+        millisFadeEnds=millisFadeStarted+(10-currentCycleSpeed)*250;
 
-        if (theCommand=='C') {
+        if (theCommand=='C' || theCommand=='i') {
 
           currentMode=MODE_FADE_INTO_CYCLE;
 
