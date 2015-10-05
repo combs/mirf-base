@@ -11,6 +11,8 @@ ourScreenWidth=ImageGrab.grab().size[0]
 
 ourStrip=8
 
+def millis():
+	return int(round(time.time() * 1000))
 
 def getChunk(chunk,ourImage):
 	if chunk > (ourStrip-1):
@@ -44,11 +46,11 @@ scp = SCPClient(ssh.get_transport())
 
 iterator=99
 enabled=1
+lastMillis=millis();
+
 
 def doLoop(sc) :
-	global iterator
-	global enabled
-	global ourScreenWidth
+	global iterator, enabled, ourScreenWidth, lastMillis
 	
 	iterator += 1
 	
@@ -65,7 +67,7 @@ def doLoop(sc) :
 
 	if (enabled):
 				
-		sc.enter(0.25, 1, doLoop, (sc,))
+		sc.enter(0.2, 1, doLoop, (sc,))
 		colors = [0 for i in xrange(ourStrip)] 
 		colorCommand="WINKYBASESA9"
 		ourImage=Image
@@ -89,7 +91,7 @@ def doLoop(sc) :
 	#	fileOut.close()
 	
 		colorCommand = colorCommand.replace("\"", r"\"")
-	 	print "echo \"" + colorCommand + "\">/var/local/nrf24/out/ambilight"
+#	 	print "echo \"" + colorCommand + "\">/var/local/nrf24/out/ambilight"
 	 	
 		try:
 			ssh.exec_command("echo \"" + colorCommand + "\">/var/local/nrf24/out/ambilight")
@@ -98,9 +100,11 @@ def doLoop(sc) :
 		except socket.error as e:
 			ssh.connect("raspbmc.local",username="pi")
 		
+#		print millis() - lastMillis
+#		lastMillis=millis()
 
 
-s.enter(0.25, 1, doLoop, (s,))
+s.enter(0.2, 1, doLoop, (s,))
 s.run()
 
 
