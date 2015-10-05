@@ -114,7 +114,7 @@ while read TO FROM DATA DETAILS; do
 			
 			for FILE in $OUTFILES
 				do
-				cat "$FILE" >&3 && rm "$FILE"
+				cat "$FILE" >&3 && rm "$FILE" && echo "" >&3
 				done
 		fi
 		NAMEDOUTFILES=`find /var/local/nrf24/out -maxdepth 2 -mindepth 2 -type f`
@@ -123,7 +123,7 @@ while read TO FROM DATA DETAILS; do
 			
 			for FILE in $NAMEDOUTFILES
 				do
-				echo -n "`dirname $FILE | sed s:.*/::`BASES" >&3 && cat "$FILE" >&3 && rm "$FILE"
+				echo -n "`dirname $FILE | sed s:.*/::`BASES" >&3 && cat "$FILE" >&3 && rm "$FILE" && echo "" >&3
 				done
 		fi
 	else 
