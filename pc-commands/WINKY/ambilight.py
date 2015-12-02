@@ -71,9 +71,18 @@ def doLoop(sc) :
 	iterator += 1
 	
 	if (iterator==100):
-		if (os.name=="posix"):
-			if (os.system("system_profiler SPDisplaysDataType | grep -Ei 'toshiba|argley'")>0) :
-				enabled=0
+	
+		if (enabled):
+		
+			print "checking monitor..."
+			iterator=0
+			if (os.name=="posix"):
+				if (os.system("system_profiler SPDisplaysDataType | grep -Ei 'toshiba|argley'")>0) :
+					enabled=0
+					print "TOSHIBA or ARGLEY not found. Sleeping..."
+				else:
+					enabled=1
+					print "screen connected."
 			else:
 				enabled=1
 					
