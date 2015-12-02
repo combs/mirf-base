@@ -19,6 +19,7 @@ fi
 exec 3<> $SERIAL 
 sleep 1
 
+nc -lCk -p 10000 -I 1 -O 1 > $SERIAL & 
 
 while read TO FROM DATA DETAILS; do
 	DATA=`echo $DATA|tr '\r' ' '|sed -e 's:[ \t]*$::'`
