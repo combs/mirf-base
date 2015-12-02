@@ -70,6 +70,8 @@ def doLoop(sc) :
 	
 	iterator += 1
 	
+	sc.enter(0.2, 1, doLoop, (sc,))
+	
 	if (iterator==100):
 	
 		if (enabled):
@@ -101,8 +103,7 @@ def doLoop(sc) :
 			print "sleeping..."
 
 	if (enabled):
-				
-		sc.enter(0.2, 1, doLoop, (sc,))
+		
 		colors = [0 for i in xrange(ourStrip)] 
 		colorCommand="WINKYBASESA9"
 
@@ -116,10 +117,11 @@ def doLoop(sc) :
 					ourWidth=ImageGrab.grab().size[0]
 					colors[chunk]=getChunk(chunk)
 				colorCommand=colorCommand + encodeColor(colors[chunk][0],colors[chunk][1],colors[chunk][2])
-		#	colorCommand=colorCommand + "\n\r"
 
 		except:
-			print "capture yacked"
+			print "capture yacked: ",sys.exc_info()[0]
+
+
 			#	fileOut = open("/tmp/ambilight","w+")
 	#	fileOut.write(colorCommand)
 	#	fileOut.close()
@@ -127,19 +129,19 @@ def doLoop(sc) :
 		colorCommand = colorCommand.replace("\"", r"\"")
 #	 	print "echo \"" + colorCommand + "\">/var/local/nrf24/out/ambilight"
 	 	
-		try:
-			ssh.exec_command("echo \"" + colorCommand + "\">/var/local/nrf24/out/ambilight")
+		try: 
+			ssh.exec_command("echo \"" + colorCommand + "\">/var/local/nrf24/out/ambilight") 
+			# print str(iterator)+" " + str(ourOffset)
+			
 			
 	#		scp.put("/tmp/ambilight","/var/local/nrf24/out/ambilight")
 		except socket.error as e:
+			print "connection failed"
 			ssh.connect("raspbmc.local",username="pi")
 		
 #		print millis() - lastMillis
-#		lastMillis=millis()
+#		lastMillis=millis() 	
 
-
+print "starting up task..."
 s.enter(0.2, 1, doLoop, (s,))
 s.run()
-
-
-	
