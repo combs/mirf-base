@@ -107,7 +107,6 @@ def doLoop(sc) :
 		colors = [0 for i in xrange(ourStrip)] 
 		colorCommand="WINKYBASESA9"
 		
-		if (enabled):
 		try:
 			ourImage=ImageGrab.grab(bbox=(0,ourOffset,ourScreenWidth,ourOffset+100))
 				
@@ -130,8 +129,7 @@ def doLoop(sc) :
 		colorCommand = colorCommand.replace("\"", r"\"") + "\r\n"
 
 #	 	print "echo \"" + colorCommand + "\">/var/local/nrf24/out/ambilight"
-	 	
-		try: 
+	 	try: 
 			print(colorCommand)
 			sock.send(colorCommand)
 			# print str(iterator)+" " + str(ourOffset)
