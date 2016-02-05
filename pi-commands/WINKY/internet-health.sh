@@ -8,6 +8,7 @@ then
 
 echo 'WINKYBASESp4"    ' > $BASEDIR/out/internet-health
 touch /tmp/cache-mirf-internet-health
+echo "Failed to ping bing.com in 1 second at `date`" >> ~/.internet-health.log
 
 elif [ -e /tmp/cache-mirf-internet-health ]
 then
