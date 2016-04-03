@@ -32,8 +32,8 @@ function encodeColorChannel($value) {
 function encodeColor($red,$green,$blue) {
 	$text="";
 	$text .= encodeColorChannel($red );
-	$text .= encodeColorChannel($green ); 
-	$text .= encodeColorChannel($blue);	
+	$text .= encodeColorChannel($green );
+	$text .= encodeColorChannel($blue);
 	return $text;
 }
 function random_color_part() {
@@ -45,7 +45,7 @@ function random_color() {
 }
 
 
-	
+
 $modes=array(
 	"C"=>"Color cycle",
 	"f"=>"Fade to one color",
@@ -54,12 +54,12 @@ $modes=array(
 	"c"=>"Set to one color immediately",
 	"i"=>"Idle animation (ignored unless nothing else has happened)"
 	);
-	
+
 $speed_modes=array("C");
 
 
- 
-		
+
+
 
 $data_dir="data";
 
@@ -71,26 +71,26 @@ $savetext="";
 
 if (!empty($_GET["m"])) {
 	$id=$_GET["m"];
-}  
+}
 
 $speed=isset($_GET['speed']) ? $_GET['speed'] : 3;
 $mode=isset($_GET['mode']) ? $_GET['mode'] : "C";
- 
-	
-if (isset($_GET['random']) || strpos($argv[0], "random") !== false ) { 
+
+
+if (isset($_GET['random']) || strpos($argv[0], "random") !== false ) {
 	$mode=array_keys($modes)[ rand(0, count($modes) - 2 ) ] ;  // hack -- ignore idle
 	$speed=rand(1,9);
-	
+
 	for ($a=0;$a<8;$a++) {
 		$_GET['color' . $a]="#ffffff";
 	}
 	for ($a=0;$a<rand(1,8);$a++) {
 		$_GET['color' . $a]="#" . random_color();
 	}
-	
 
-	
-	
+
+
+
 }
 
 
@@ -100,28 +100,28 @@ if (in_array($mode,$speed_modes)) {
 }
 
 $gotone=false;
- 
+
 	for ($a=0;$a<8;$a++) {
 		if (isset($_GET['color' . $a]) && $_GET['color' . $a] != "#ffffff") {
-			
+
 			$savetext.="\"" . $_GET['color' . $a] . "\",";
-			
-			$array=hex2RGB($_GET['color' . $a]); 
+
+			$array=hex2RGB($_GET['color' . $a]);
 			$command .= encodeColor($array[0],$array[1],$array[2]);
 			$gotone=true;
-		}		
+		}
 	}
 	$savetext .= "\"#ffffff\"";
 	$command .= "\n";
-	
+
 	if ($gotone===true) {
 		file_put_contents("/var/local/nrf24/out/winky-web",$command);
 	}
-	
+
 	if (isset($_GET['savename']) && strlen($_GET['savename']) > 0 ) {
 		file_put_contents("data/" . filter_var($_GET['savename'] . ".txt", FILTER_SANITIZE_STRING), $savetext);
 	}
-	
+
 
 
 
@@ -132,7 +132,7 @@ echo("<!DOCTYPE html>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
 
-    <title> RAINBOW!! </title> <meta name='description' content='RAINBOW!!'> 
+    <title> RAINBOW!! </title> <meta name='description' content='RAINBOW!!'>
     <meta name='author' content='RAINBOW!! 🌈'>
 
     <!-- Enable responsive viewport -->
@@ -140,7 +140,7 @@ echo("<!DOCTYPE html>
 
     <!-- Bootstrap styles -->
     <link href='bootstrap/css/bootstrap.min.css' rel='stylesheet'>
- 
+
      <meta property='og:title' content='" . htmlspecialchars($title) . "' />
 <meta name='description' content='wow... " . htmlspecialchars("🌈  " . $plot) . "' />
     <meta name='og:description' content='wow? " . htmlspecialchars("🌈 " . $plot) . "' />
@@ -163,19 +163,19 @@ echo("<!DOCTYPE html>
       <link rel='apple-touch-icon' sizes='72x72' href='images/apple-touch-icon-72x72.png'>
       <link rel='apple-touch-icon' sizes='114x114' href='images/apple-touch-icon-114x114.png'>
     -->
- 
+
 	<!-- web fonts -->
 	<link href='http://fonts.googleapis.com/css?family=Permanent+Marker|VT323' rel='stylesheet' type='text/css'>
 	<script>
     function load() {
-    	
+
     	$('input.color').data('touched','no');
     	$('input.color').val('#ffffff');
     	for (var a=0;a<arguments.length;a++) {
     	$('input.color').eq(a).val(arguments[a]);
     	$('input.color').eq(a).data('touched','yes');
     	}
-    	
+
     }</script>
   </head>
 
@@ -189,9 +189,9 @@ echo("<!DOCTYPE html>
 	'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 	})(window,document,'script','dataLayer','GTM-NMBXLX');</script>
 	<!-- End Google Tag Manager -->
-	
+
 	<div class='container'><div class='row text-center'> <h1 style='
-	    color: white; 
+	    color: white;
     background: -moz-linear-gradient( top ,
         rgba(255, 0, 0, 1) 0%,
         rgba(255, 255, 0, 1) 15%,
@@ -200,17 +200,17 @@ echo("<!DOCTYPE html>
         rgba(0, 0, 255, 1) 65%,
         rgba(255, 0, 255, 1) 80%,
         rgba(255, 0, 0, 1) 100%);
-    background: -webkit-gradient(linear,  left top,  left bottom, 
-        color-stop(0%, rgba(255, 0, 0, 1)), 
+    background: -webkit-gradient(linear,  left top,  left bottom,
+        color-stop(0%, rgba(255, 0, 0, 1)),
         color-stop(15%, rgba(255, 255, 0, 1)),
         color-stop(30%, rgba(0, 255, 0, 1)),
         color-stop(50%, rgba(0, 255, 255, 1)),
         color-stop(65%, rgba(0, 0, 255, 1)),
         color-stop(80%, rgba(255, 0, 255, 1)),
         color-stop(100%, rgba(255, 0, 0, 1)));
-        
+
         ;padding:1em .5em;'>🌈🌈🌈 Every color hooray! 🌈🌈🌈</h1></div><div class='row'><div class='center-block main-movie-magic' style=''>
-	<div class='panel panel-default'><div class='panel-heading text-center'> Pick it pick it </div><div class='panel-body text-center'><form action='color.php' method='GET'><input type='hidden' name='random' value='1'><input type='submit' value='✨🌈 RANDOM! 🌈✨'></form><br/><br/><form name='lizards' action='color.php' method='get'>Speed (for color cycling modes):<br/>Slow 
+	<div class='panel panel-default'><div class='panel-heading text-center'> Pick it pick it </div><div class='panel-body text-center'><form action='color.php' method='GET'><input type='hidden' name='random' value='1'><input type='submit' value='✨🌈 RANDOM! 🌈✨'></form><br/><br/><form name='lizards' action='color.php' method='get'>Speed (for color cycling modes):<br/>Slow
 ");
 for ($b=1;$b<10;$b++) {
 	echo("<input type='radio' name='speed' value='" . $b . "' " );
@@ -224,7 +224,7 @@ foreach(array_keys($modes) as $key) {
 	if ($key == $mode) {
 		echo(" selected ");
 	}
-	echo(">" . $modes[$key] . "</option>");	
+	echo(">" . $modes[$key] . "</option>");
 }
 
 echo("</select><br/><br/>");
@@ -237,32 +237,32 @@ echo("</select><br/><br/>");
 		echo( ( $_GET['color' . $a] && $_GET['color' . $a] != "#ffffff" )  ? "yes" : "no");
 		echo("' class='color'>");
 	}
-	
- 
+
+
  echo(" <br/>save it? filename: <input type='text' name='savename'>	<br/><br/><input type='submit' value='Do it!'></form><br/>load: ");
- 
- 
-    
+
+
+
 foreach(glob($data_dir . "/*.txt") as $thisone) {
- 
+
 	$filedata=file_get_contents($thisone);
 	echo ("<a href='#' onClick='load(");
 	echo($filedata . ")'>" . preg_replace('/\..*/','',basename($thisone)) . "</a> ");
 }
 
- 
- 
+
+
  echo(" <br/><br/>command: <pre style='border: 2px solid grey'>" . $command . "</pre><br/><br/></div></div></div>
 	</div>
-	
+
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js'></script>
     <script src='bootstrap/js/bootstrap.min.js'></script>
     <script>$('input.color').click(function() { $(this).data('touched','yes');});
     $('form').submit(function() { $('input.color').each(function() { if ($(this).data('touched')!='yes') { $(this).remove();}; } );   return true;} ) ;
-    
-    
+
+
     </script>
-    
+
   </body>
 </html>
 
