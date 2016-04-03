@@ -146,9 +146,6 @@ echo("<!DOCTYPE html>
     <meta name='og:description' content='wow? " . htmlspecialchars("🌈 " . $plot) . "' />
 <meta name='keywords' content='wow' />
 
-    <link rel='canonical' href='" . $permalink . "'/>
-    
-    
     <!-- Custom styles -->
     <link href='css/style.css' rel='stylesheet' type='text/css' media='all'>
 
