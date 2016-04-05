@@ -1,1 +1,8 @@
-../SUNNY/update
+#!/bin/bash
+cd `dirname $0`
+. ../common/get-directories
+ 
+SECONDS=`date +%s` 
+echo -n $FROM;echo -n $BASE;echo t$SECONDS\|$SECONDS
+
+
