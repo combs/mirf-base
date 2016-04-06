@@ -154,7 +154,8 @@ void loop()
       }
     } 
 
-
+    byte theLength=strlen(theMessage);
+    
     switch (theCommand) {
 
     case '$':
@@ -165,6 +166,9 @@ void loop()
       break;
     case 'c':
 
+      if (theLength % 3 != 0 ) {
+        break;
+      }
       currentRed=fromRed=toRed=unpack(theMessage[0]);
       currentGreen=fromGreen=toGreen=unpack(theMessage[1]); 
       currentBlue=fromBlue=toBlue=unpack(theMessage[2]);
@@ -174,6 +178,9 @@ void loop()
 
       break;
     case 'p':
+      if (theLength % 3 != 0 ) {
+        break;
+      }
 
       toRed=unpack(theMessage[0]);
       toGreen=unpack(theMessage[1]); 
@@ -189,22 +196,32 @@ void loop()
 
       break;
     case 'f':
+      
+      if (theLength % 3 != 0 ) {
+        break;
+      }
+
       toRed=unpack(theMessage[0]);
       toGreen=unpack(theMessage[1]); 
       toBlue=unpack(theMessage[2]);
       memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
       currentMode=MODE_FADE;
       secondsGotUpdate=secondsSinceStartup;
-
-
+      
       millisFadeStarted=millis();
       millisFadeEnds=millisFadeStarted+5000;
 
       break;
     case 'F':
+
+      if (theLength % 3 != 0 ) {
+        break;
+      }
+
       toRed=unpack(theMessage[0]);
       toGreen=unpack(theMessage[1]); 
       toBlue=unpack(theMessage[2]);
+      
       memmove(  &fromColors[0], &currentColors[0], NUM_LEDS * sizeof( CRGB) );
 
       currentMode=MODE_FADE;
@@ -239,6 +256,11 @@ void loop()
     case 'x': // Set the whole array with hard pixel boundaries
     case 'X': // Fade the whole array with hard pixel boundaries
     case 'C': // Color cycling
+      if ((theLength - 1) % 3 != 0 ) {
+        break;
+      }
+
+
       if(theCommand!='i') {
         secondsGotUpdate=secondsSinceStartup;
       }
