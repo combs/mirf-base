@@ -31,6 +31,7 @@ volatile long secondsNapStarted=0;
 #define PIN_METER_ONE 3
 #define PIN_METER_TWO 5
 #define PIN_METER_THREE 6
+#define PIN_NRF A3
 
 
 volatile int valueOne=0;
@@ -41,6 +42,9 @@ void setup()
 {
   //  Serial.begin(115200);
   //  Serial.println("hello");
+  pinMode(2,INPUT);
+  pinMode(PIN_NRF,OUTPUT);
+  digitalWrite(PIN_NRF,HIGH);
 
   wdt_disable();
   power_adc_disable();
@@ -49,6 +53,11 @@ void setup()
   getNameClient();
   getNameBase();
 
+  pinMode(13,OUTPUT);
+  digitalWrite(13,HIGH);
+  delay(1000);
+  digitalWrite(13,LOW);
+  delay(500);
   pinMode(2,INPUT);
 
   pinMode(PIN_METER_ONE,OUTPUT);
@@ -63,10 +72,19 @@ void setup()
 
   if (status==14) { 
 
+    /*
+    for (byte a=0;a<10;a++) {
+     pinMode(13,OUTPUT);
+     digitalWrite(13,HIGH);
+     delay(200);
+     digitalWrite(13,LOW);
+     delay(200);
+     }
+     */
   } 
-  else { 
-    pinMode(13,OUTPUT);
+  else {  
     while (true) {
+      pinMode(13,OUTPUT);
       digitalWrite(13,HIGH);
       delay(1000);
       digitalWrite(13,LOW);
@@ -76,17 +94,16 @@ void setup()
   }
 
 
- // attachInterrupt(0,flagUpdate,RISING);
+  // attachInterrupt(0,flagUpdate,RISING);
   flagUpdate();
 
-  SendToBase("Started");
   delay(100); // Avoid message-spamming race condition at startup
 
   setup_watchdog(WDTO_1S);
   wanderMeters(1);
 
-
-
+  SendToBase("Started");
+  
 }
 
 
@@ -112,13 +129,16 @@ void loop()
 
 
   if ( secondsSinceStartup - secondsTurnedOn > secondsScreenAwakeTime ) {
-    
+
+    SendToBase("sleeping");
     noBacklight();
     noDisplay(); 
     sleeping();
+
+  } 
+  else if ((( secondsSinceStartup - secondsNapStarted < secondsSleep )) && (secondsNapStarted != 0)) 
+  {
     
-  } else if ((( secondsSinceStartup - secondsNapStarted < secondsSleep )) && (secondsNapStarted != 0)) 
-    {
     Mirf.powerDown();
     noBacklight();
     noDisplay();
@@ -184,19 +204,17 @@ void loop()
     }
 
     // is there any data pending? 
-    if( !Mirf.isSending() && Mirf.dataReady() )
+    if( Mirf.dataReady() )
     {
 
 #ifdef LCD_UPDATES_EXTEND_ON_TIME
       secondsTurnedOn=secondsSinceStartup;
-#endif
-
+#endif 
       Mirf.getData((byte *) &data);
       String thePayload=String((char *)data);
       char theCommand=thePayload[5];
       char theMessage[Payload];
       thePayload.substring(6).toCharArray(theMessage,Payload);
-
       for (byte a=0;a<Payload;a++) {
         if (theMessage[a]=='\r' || theMessage[a]=='\n'){
           theMessage[a]='\0';
@@ -206,10 +224,11 @@ void loop()
       byte length=strlen(theMessage);
       switch (theCommand) {
 
-      case '$':
-        wanderMeters(5);
-        HandleBuiltinMessage(theMessage);  
+      case '$': 
+        digitalWrite(13,HIGH);
 
+        HandleBuiltinMessage(theMessage);  
+        wanderMeters(1);
         break;
 
       case 'S':
@@ -288,7 +307,7 @@ void waking() {
 }
 
 void sleeping() {
-
+   
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   //pinMode(LCD_BACKLIGHT_PIN,INPUT); 
 
@@ -406,6 +425,7 @@ void backlight() {
 }
 void noBacklight() {
 }
+
 
 
 
