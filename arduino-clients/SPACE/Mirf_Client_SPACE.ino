@@ -55,11 +55,15 @@ void setup()
   wdt_disable();
 
   power_adc_disable();
-  //  power_usart0_disable();
+  power_timer1_disable();
+  power_timer2_disable();
+  power_twi_disable();
+  // power_usart0_disable();
 
   getNameClient();
   getNameBase();
 
+  pinMode(PIN_NRF,OUTPUT);  
   pinMode(PIN_OUTPUT,OUTPUT); 
   pinMode(PIN_GROUND,OUTPUT);
   digitalWrite(PIN_GROUND,LOW);
@@ -129,7 +133,7 @@ void loop()
       millisZero=millis();
       stateCurrent=STATE_DEPARTING;
     }
-    else {
+    else { 
       sleeping();
     }
     break;
@@ -155,7 +159,7 @@ void loop()
     else {
       long thisTime= ( 30 - (secondsRise - secondsUnixTime) ) * 1000L;
       thisTime += ((millis() - millisZero) % 1000);
-      analogWrite(PIN_OUTPUT,map(thisTime,0,30000,0,255));
+      analogWrite(PIN_OUTPUT,map(thisTime,0,30000,0,255)); 
     }
     break;
   case STATE_OVERHEAD :
@@ -165,7 +169,7 @@ void loop()
     } 
     else {
       digitalWrite(PIN_OUTPUT,HIGH);
-      napping();
+      sleeping();
     }
 
     break;
@@ -485,10 +489,9 @@ ISR(WDT_vect) {
 
 
 void wakeRadio() {
-
-  pinMode(PIN_NRF,OUTPUT);  
+//  SPI.begin();
   digitalWrite(PIN_NRF,HIGH);
-  delay(200); // Power back up those bypass caps
+//  delay(200); // Power back up those bypass caps
   SetupMirfClient();
 
 }
@@ -498,6 +501,9 @@ void sleepRadio() {
 
   Mirf.powerDown(); 
   digitalWrite(PIN_NRF,LOW);
+//  pinMode(11,INPUT);
+//  pinMode(12,INPUT);
+//  pinMode(13,INPUT);
   //  pinMode(PIN_NRF,INPUT);  
 
 }
