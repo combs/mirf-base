@@ -819,10 +819,10 @@ void loop(void) {
 
     Mirf.getData((byte *) &data);
     String thePayload=String((char *)data);
-
+        char theCommand=thePayload[5];
     char theMessage[Payload];
     thePayload.substring(6).toCharArray(theMessage,Payload);
-    
+
     //    SendToBase("Ack");
     for (byte a=0;a<Payload;a++) {
       if (theMessage[a]=='\r' || theMessage[a]=='\n'){
@@ -837,16 +837,16 @@ void loop(void) {
     byte updateDirty=0;
 
     byte length=strlen(theMessage);
-    if (length != 22) {
+    if (length != 21) {
       updateDirty=1;
     }
     byte theVar=1;
     theFirst[10]='\0';
     theSecond[10]='\0';
-    if (theMessage[0] != 't') {
+    if (theCommand != 't') {
       updateDirty=1;
     }
-    for (byte a=1;a<22;a++) {
+    for (byte a=0;a<21;a++) {
       if (theMessage[a]=='|') {
         theVar=2; 
       } 
@@ -856,7 +856,7 @@ void loop(void) {
         } 
         else if (theVar==2) {
           theSecond[a-11]=theMessage[a];
-          if (theMessage != '\0' && theMessage[a-11] != theMessage[a]) {
+          if (theMessage[a] != '\0' && theMessage[a-11] != theMessage[a]) {
             updateDirty=1;
           }
 
