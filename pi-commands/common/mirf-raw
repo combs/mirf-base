@@ -1,0 +1,6 @@
+#!/bin/bash
+cd `dirname $0`
+. ../common/get-directories
+FN=`mktemp`
+echo "$FROM $@"
+echo "$FROM $@" > $FN && mv $FN /var/local/nrf24/out/
