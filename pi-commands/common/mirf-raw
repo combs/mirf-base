@@ -4,10 +4,9 @@ cd `dirname $(readlink $0)`
 FN=`mktemp`
 echo "$FROM $@"
 
-if [ "$@" != "" ]
+if [ "$@ " == " " ]
 then
-  echo "$FROM $@" > $FN && mv $FN /var/local/nrf24/out/
-else
   echo "$FROM" > $FN && mv $FN /var/local/nrf24/out/
+else
+  echo "$FROM $@" > $FN && mv $FN /var/local/nrf24/out/
 fi
- 
