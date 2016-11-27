@@ -1,5 +1,5 @@
 #!/bin/bash
-cd `dirname $0`
+cd `dirname $(readlink $0)`
 . ../common/get-directories
 FN=`mktemp`
 echo "$FROM $@"
