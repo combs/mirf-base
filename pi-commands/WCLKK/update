@@ -106,7 +106,7 @@ if ($worst_so_far > 15 ) {
 	
 } else if ($rain_inches > 0 && $rain_inches < 0.1 && $precip_chance > 0  ) {
 	
-	$outputConditions .= 'Light mist (' . $precip_chance . "%)";
+	$outputConditions .= 'Light rain (' . $precip_chance . "%)";
 
 } else if ($rain_inches > 0.1 && $precip_chance > 0 ) {
 	
