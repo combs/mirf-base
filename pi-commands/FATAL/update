@@ -1,8 +1,27 @@
-#!/bin/bash
+#!/usr/bin/php
+<?php
 
-cd `dirname $0`
-. ../common/get-directories
+// Standard includes
 
-# curl 'http://interactive.guim.co.uk/2015/the-counted/v/1460319534281/js/main.js' 2>/dev/null | grep 'var total$1' | sed -e 's:.* = ::' -e 's:;.*::' -e 's:^:V:' -e "s:^:$FROM$BASE:"
-curl http://killedbypolice.net/ 2>/dev/null | grep '<center>(' | head -1 | sed -e "s:.*[(]::" -e "s:[)].*::" -e 's:^:V:' | sed -e "s:^:$FROM$BASE:"
-echo ""
+$our_include_path=dirname(__FILE__) . ":" . dirname(__FILE__) . "/../common" . ":" . GETENV("HOME");
+set_include_path($our_include_path);
+require "get-directories.php";
+
+
+// Per-project includes
+
+
+// Try to use cached results first
+
+$max_age_seconds=60*30;
+try_cache($cache_file,$max_age_seconds);
+
+
+// Ugly curl one-liner
+$output = `curl http://killedbypolice.net/ 2>/dev/null | grep '<center>(' | head -1 | sed -e "s:.*[(]::" -e "s:[)].*::" -e 's:^:V:' `;
+
+
+
+send_to_client($output);
+
+?>
