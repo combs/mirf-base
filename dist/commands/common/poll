@@ -1,0 +1,66 @@
+#!/bin/bash
+cd `dirname $0`
+. ../common/get-directories
+
+SEEN=false
+
+	if [ "$FROM" != "" ]
+		then
+
+
+		# identify all zones that contain the client
+		# e.g., /var/local/nrf24/zones/bedroom/members
+
+		ZONES=`find $BASEDIR/zones/ -name "$FROM" | sed -e 's:/[^/]*$::'`
+
+		for ZONE in $ZONES
+			do
+
+			if [ "$ZONE" != "" ]
+				then
+
+				# get the actual zone path... strip off "members" folder
+
+				ZONENAME=`dirname "$ZONE"`
+
+				# for each one, have we heard from it in the last 30 min?
+
+				if [ -d "$ZONENAME" ] && [ -e "$ZONENAME/last-seen" ] && [ "`find "$ZONENAME/last-seen" -mmin -30`" != "" ]
+					then
+					SEEN=true
+				else
+					>&2 echo "Not seen yet"
+				fi
+
+			fi
+		done
+
+
+	fi
+
+if [ "$SEEN" != "false" ]
+	then
+
+ 	if [ "$FROM" != "" ]
+		then
+
+		if [ -x "../$FROM/zone-sense" ]
+			then
+			../$FROM/zone-sense $FROM $DETAILS &
+		elif [ -x "../$FROM/update" ]
+			then
+			../$FROM/update $FROM $DETAILS &
+		else
+			>&2 echo "No command found"
+		fi
+	else
+		>&2 echo "Empty source"
+	fi
+else
+	>&2 echo "Seen it already"
+	echo -n "$FROM"
+	echo "BASESSleep"
+
+fi
+
+wait

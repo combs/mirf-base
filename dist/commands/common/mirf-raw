@@ -1,0 +1,12 @@
+#!/bin/bash
+cd `dirname $(readlink $0)`
+. ../common/get-directories
+FN=`mktemp`
+echo "$FROM $@"
+
+if [ "$@ " == " " ]
+then
+  echo "$FROM" > $FN && mv $FN /var/local/nrf24/out/
+else
+  echo "$FROM $@" > $FN && mv $FN /var/local/nrf24/out/
+fi
