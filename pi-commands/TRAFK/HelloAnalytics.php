@@ -5,7 +5,7 @@ function getService()
   // Creates and returns the Analytics service object.
 
   // Load the Google API PHP Client Library.
-  require_once 'google-api-php-client/src/Google/autoload.php';
+  require_once 'vendor/autoload.php';
 
   // Use the developers console and replace the values with your
   // service account email, and relative location of your key file.
