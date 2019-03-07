@@ -1,8 +1,0 @@
-#!/bin/bash
-cd `dirname $0`
-. ../common/get-directories
-if [ -e /tmp/mirf-name ]
-then
-	../common/provision `cat /tmp/mirf-name`
-fi
-
