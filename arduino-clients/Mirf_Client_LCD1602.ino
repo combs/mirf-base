@@ -129,6 +129,7 @@ void setup()
   delay(2);
   // lcd.clear();
   lcd.print("Starting radio..");
+  lcd.cursor();
 
   SetupMirfClient();
 
@@ -278,7 +279,7 @@ void loop()
 
     if (  isUpdateTooOld() &&  !isUpdateRequested() ) {
       secondsRequestedUpdate=secondsSinceStartup;
-      // ,"Refresh");
+
       requestUpdate();
       // screen is on, data is old, but let's not flagUpdate because that will keep screen on longer
 
@@ -458,6 +459,7 @@ void paintScreen() {
 #ifdef LCD_CLEAR_ON_SLEEP
 
   if (isUpdateTooOld()) {
+
     myLCDClear();
     return;
   }
