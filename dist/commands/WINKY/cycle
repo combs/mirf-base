@@ -1,0 +1,6 @@
+#!/bin/bash
+cd `dirname $0`
+ARGS=$@
+
+. ../common/get-directories 
+php cycle.php WINKY $ARGS >/tmp/test && mv /tmp/test $BASEDIR/out/WINKY-command
