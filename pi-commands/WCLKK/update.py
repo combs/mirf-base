@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from pyowm import OWM
 from pprint import pprint
 
