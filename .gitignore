@@ -44,7 +44,9 @@ last-seen
 
 .wunderground-api-key
 client_secrets.p12
-.api-key
+.api-key*
+ApiKey.ini
+
 
 # Generated files
 out/**

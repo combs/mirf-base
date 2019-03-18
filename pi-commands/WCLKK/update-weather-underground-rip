@@ -1,0 +1,153 @@
+#!/usr/bin/php
+<?php
+
+// Standard includes
+
+$our_include_path=dirname(__FILE__) . ":" . dirname(__FILE__) . "/../common" . ":" . GETENV("HOME");
+set_include_path($our_include_path);
+require "get-directories.php";
+
+
+// Per-project includes
+
+require "alerts.php";
+
+
+// Try to use cached results first
+
+$max_age_seconds=60*30;
+try_cache($cache_file,$max_age_seconds);
+
+
+// Get locally stored API key
+
+$api_key=rtrim(file_get_contents(".wunderground-api-key",true));
+if (!$api_key) {
+ exit("\nPlease put your Weather Underground API key in .wunderground-api-key\n");
+}
+
+
+// Retrieve JSON results from server
+
+$parsed_json=null;
+while (!$parsed_json && $errors<2) {
+	$json_string_conditions = file_get_contents("http://api.wunderground.com/api/" . $api_key . "/conditions/forecast/alerts/q/DC/Washington.json");
+	$parsed_json = json_decode($json_string_conditions);
+	if (!$parsed_json) {
+		$errors++;
+		sleep(2);
+	}
+}
+
+if ($errors>=3) {
+	exit;
+}
+
+if (!array_key_exists("current_observation",$parsed_json)) {
+    send_to_client("0WU API error");
+    send_to_client("CWU API error");
+    die();
+}
+
+
+// Parse JSON results
+
+$temp_f = $parsed_json->{'current_observation'}->{'temp_f'};
+$wind = $parsed_json->{'current_observation'}->{'wind_mph'};
+$this_forecast = $parsed_json->{'forecast'}->{'simpleforecast'}->{'forecastday'}[0];
+$wind = $this_forecast->{'avewind'}->{'mph'}; // update with forecast if possible
+$temp_low = $this_forecast->{'low'}->{'fahrenheit'};
+$temp_high = $this_forecast->{'high'}->{'fahrenheit'};
+$humidity = $this_forecast->{'avehumidity'};
+$rain_inches = $this_forecast->{'qpf_allday'}->{'in'};
+$precip_chance = $this_forecast->{'pop'};
+$snow_inches = $this_forecast->{'snow_allday'}->{'in'};
+$conditions = $this_forecast->{'conditions'};
+// $alert_texts and $alert_priorities moved to alert.php
+
+
+// Prioritize any NWS alerts and retrieve short text as needed.
+
+$worst_so_far=0;
+$alert_text="";
+
+foreach ($parsed_json->{'alerts'} as $alert) {
+
+	if ($alert_priorities[$alert->{'type'}] > $worst_so_far) {
+		$worst_so_far=$alert_priorities[$alert->{'type'}];
+		$alert_text=$alert->{'description'};
+		if ( strlen($alert_text)>16  && array_key_exists($alert->{'type'},$alert_texts)) {
+			$alert_text=$alert_texts[$alert->{'type'}];
+		}
+
+	}
+}
+
+
+// Set up variables.
+
+$outputConditions = "C";
+$outputNow = "N";
+$outputLater = "L";
+$output1 = "0";
+$output2 = "1";
+
+
+// Populate variables
+
+$output1 .=  round($temp_f) . chr(223) . " now. " . $temp_low . "-" . $temp_high . chr(223);
+$outputNow .=   round($temp_f) . chr(223) . " now. ";
+$outputLater .=  $temp_low . "-" . $temp_high . chr(223);
+
+
+if ($worst_so_far > 15 ) {
+
+	// If there is a serious alert, use that...
+
+	$outputConditions .= $alert_text;
+
+} else if ($snow_inches > 0 && $precip_chance > 0 ) {
+
+	$outputConditions .= round($snow_inches,1) . '" SNOW! (' . $precip_chance . "%)";
+
+} else if ($rain_inches > 0 && $rain_inches < 0.1 && $precip_chance > 0  ) {
+
+	$outputConditions .= 'Light rain (' . $precip_chance . "%)";
+
+} else if ($rain_inches > 0.1 && $precip_chance > 0 ) {
+
+	$outputConditions .= round($rain_inches,1) . '" rain (' . $precip_chance . "%)";
+
+} else if ($humidity > 60)  {
+
+	$outputConditions .=  round($humidity) . "% humidity";
+
+} else if ($wind > 10)  {
+
+	$outputConditions .=  round($wind) . "mph wind";
+
+} else if ($worst_so_far > 1 ) {
+
+	// public info advisories, record set, etc.
+
+	$outputConditions .= $alert_text;
+
+} else {
+
+	$outputConditions .=  ucfirst(strtolower(trim($conditions)));
+
+}
+
+$output2 = $outputConditions;
+$output2 = substr_replace($output2,'1',0,1);
+
+
+// Send
+
+send_to_client($outputNow);
+send_to_client($outputLater);
+send_to_client($outputConditions);
+
+
+
+?>
