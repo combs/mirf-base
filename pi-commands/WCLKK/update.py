@@ -2,8 +2,9 @@
 from pyowm import OWM
 from pprint import pprint
 import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__) ) )+ "/common")
+mydir = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.dirname(mydir))
+sys.path.append(os.path.dirname(mydir)+ "/common")
 
 from MirfBase import MirfBase
 
@@ -13,7 +14,7 @@ mirf.try_cache(60*15)
 degrees = str(chr(223))
 apikey=None
 
-with open(".api-key-openweathermap", "rb") as apifile:
+with open(mydir + "/.api-key-openweathermap", "rb") as apifile:
     apikey = apifile.readline().strip()
 
 owm = OWM(apikey)
