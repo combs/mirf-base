@@ -1,6 +1,14 @@
 #!/usr/bin/python
 from pyowm import OWM
 from pprint import pprint
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__) ) )+ "/common")
+
+from MirfBase import MirfBase
+
+mirf = MirfBase()
+mirf.try_cache(60*15)
 
 degrees = str(chr(223))
 apikey=None
@@ -37,6 +45,6 @@ now = temp['temp']
 outputNow += str(int(now)) + degrees + " now."
 outputLater += (str(int(min)) + "-" + str(int(max)) + degrees)
 
-print(outputNow)
-print(outputLater)
-print(outputConditions)
+mirf.send_to_client(outputNow)
+mirf.send_to_client(outputLater)
+mirf.send_to_client(outputConditions)

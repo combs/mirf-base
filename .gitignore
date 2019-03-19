@@ -40,6 +40,9 @@ Thumbs.db
 last-seen
 
 
+# Python
+**/*.pyc
+
 # API keys
 
 .wunderground-api-key
