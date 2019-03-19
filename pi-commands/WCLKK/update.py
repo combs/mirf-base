@@ -19,33 +19,60 @@ with open(mydir + "/.api-key-openweathermap", "rb") as apifile:
 
 owm = OWM(apikey)
 
-wap = owm.weather_at_place('20017,US')
-w = wap.get_weather()
+placename='20017,US'
 
-pprint(w.get_temperature(unit='fahrenheit'))
+wap = owm.weather_at_place(placename)
+w = wap.get_weather()
+fc = owm.daily_forecast(placename, limit=1)
 
 
 outputConditions = "C"
 outputNow = "N"
 outputLater = "L"
-output1 = "0"
-output2 = "1"
+output1 = "0                "
+output2 = "1                "
 
 status = w.get_status()
 detailedStatus = w.get_detailed_status().capitalize()
 
-outputConditions += detailedStatus
 temp = w.get_temperature(unit='fahrenheit')
-rain = w.get_rain()
-snow = w.get_snow()
-wind = w.get_wind()
 min = temp['temp_min']
 max = temp['temp_max']
 now = temp['temp']
 
+if fc:
+    w = fc.get_forecast().get_weathers()[0]
+
+rain = w.get_rain()
+snow = w.get_snow()
+wind = w.get_wind()
+
+conditions = []
+
+bestCondition = detailedStatus
+
+if len(snow) > 0:
+    conditions.append(str(max(values(snow))) + '" snow')
+if len(rain) > 0:
+    conditions.append(str(max(values(rain))) + '" rain')
+
+conditions.append(detailedStatus)
+conditions.append(status)
+
+length = 0
+acceptedConditions = []
+for condition in conditions:
+    if len(condition) + length + (len(acceptedConditions) * 2) < 16:
+        length += len(condition)
+        acceptedConditions.append(condition)
+
+outputConditions = ", ".join(acceptedConditions)
+
 outputNow += str(int(now)) + degrees + " now."
 outputLater += (str(int(min)) + "-" + str(int(max)) + degrees)
 
+mirf.send_to_client(output1)
+mirf.send_to_client(output2)
 mirf.send_to_client(outputNow)
 mirf.send_to_client(outputLater)
 mirf.send_to_client(outputConditions)
