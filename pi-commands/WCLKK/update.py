@@ -36,12 +36,17 @@ status = w.get_status()
 detailedStatus = w.get_detailed_status().capitalize()
 
 temp = w.get_temperature(unit='fahrenheit')
+now = temp['temp']
 min = temp['temp_min']
 max = temp['temp_max']
-now = temp['temp']
 
 if fc:
     w = fc.get_forecast().get_weathers()[0]
+    temp = w.get_temperature(unit='fahrenheit')
+    print(temp)
+    min = temp['min']
+    max = temp['max']
+
 
 rain = w.get_rain()
 snow = w.get_snow()
@@ -66,7 +71,7 @@ for condition in conditions:
         length += len(condition)
         acceptedConditions.append(condition)
 
-outputConditions = ", ".join(acceptedConditions)
+outputConditions = "C" + ", ".join(acceptedConditions)
 
 outputNow += str(int(now)) + degrees + " now."
 outputLater += (str(int(min)) + "-" + str(int(max)) + degrees)
