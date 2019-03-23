@@ -76,8 +76,8 @@ outputConditions = "C" + ", ".join(acceptedConditions)
 outputNow += str(int(now)) + degrees + " now."
 outputLater += (str(int(min)) + "-" + str(int(max)) + degrees)
 
-mirf.send_to_client(output1)
-mirf.send_to_client(output2)
+# mirf.send_to_client(output1)
+# mirf.send_to_client(output2)
 mirf.send_to_client(outputNow)
 mirf.send_to_client(outputLater)
 mirf.send_to_client(outputConditions)
