@@ -36,16 +36,16 @@ status = w.get_status()
 detailedStatus = w.get_detailed_status().capitalize()
 
 temp = w.get_temperature(unit='fahrenheit')
-now = temp['temp']
-min = temp['temp_min']
-max = temp['temp_max']
+tempnow = temp['temp']
+tempmin = temp['temp_min']
+tempmax = temp['temp_max']
 
 if fc:
     w = fc.get_forecast().get_weathers()[0]
     temp = w.get_temperature(unit='fahrenheit')
-    print(temp)
-    min = temp['min']
-    max = temp['max']
+    # print(temp)
+    tempmin = temp['min']
+    tempmax = temp['max']
 
 
 rain = w.get_rain()
@@ -57,8 +57,10 @@ conditions = []
 bestCondition = detailedStatus
 
 if len(snow) > 0:
+    # print(snow)
     conditions.append(str(max(snow.values())) + '" snow')
 if len(rain) > 0:
+    # print(rain)
     conditions.append(str(max(rain.values())) + '" rain')
 
 conditions.append(detailedStatus)
@@ -73,8 +75,8 @@ for condition in conditions:
 
 outputConditions = "C" + ", ".join(acceptedConditions)
 
-outputNow += str(int(now)) + degrees + " now."
-outputLater += (str(int(min)) + "-" + str(int(max)) + degrees)
+outputNow += str(int(tempnow)) + degrees + " now."
+outputLater += (str(int(tempmin)) + "-" + str(int(tempmax)) + degrees)
 
 # mirf.send_to_client(output1)
 # mirf.send_to_client(output2)
