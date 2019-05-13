@@ -58,10 +58,10 @@ bestCondition = detailedStatus
 
 if len(snow) > 0:
     # print(snow)
-    conditions.append(str(max(snow.values())) + '" snow')
+    conditions.append(str(max(snow.values()) / 25.4) + '" snow')
 if len(rain) > 0:
     # print(rain)
-    conditions.append(str(max(rain.values())) + '" rain')
+    conditions.append(str(max(rain.values() ) / 25.4) + '" rain')
 
 conditions.append(detailedStatus)
 conditions.append(status)
