@@ -18,10 +18,19 @@ try_cache($cache_file,$max_age_seconds);
 
 
 // Ugly curl one-liner
-$output = `curl http://killedbypolice.net/ 2>/dev/null | grep '<center>(' | head -1 | sed -e "s:.*[(]::" -e "s:[)].*::" -e 's:^:V:' `;
+
+$doc = new DOMXPath(@DOMDocument::loadHTML(file_get_contents("https://killedbypolice.net/")));
+
+$num = 0;
+foreach($doc->query("//h3") as $el){
+	$val = $el->nodeValue;
+	if (strpos($val, "pdated") > -1) {
+		$arr = explode(" ",$val);
+		$num = $arr[0];
+	}
+}
 
 
-
-send_to_client($output);
+send_to_client($num);
 
 ?>
