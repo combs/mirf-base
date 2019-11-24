@@ -31,6 +31,6 @@ foreach($doc->query("//h3") as $el){
 }
 
 
-send_to_client($num);
+send_to_client("V" . $num);
 
 ?>
