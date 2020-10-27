@@ -1,1 +1,11 @@
-update
+#!/bin/bash
+cd `dirname $0`
+. ../common/get-directories
+
+# SECONDS=`date +%s`
+# SECONDS=`node -e 'console.log( Math.round(new Date().getTime()/1000.0) - new Date().getTimezoneOffset()*60);'`
+# SECONDS=`node -e 'var cats = Math.round(new Date().getTime()/1.0) - new Date().getTimezoneOffset()*60; process.stdout.write( cats.toString() );'`
+SECONDS=`expr $(date +%s) - $(node -e 'process.stdout.write( (new Date().getTimezoneOffset()*60).toString() );' ) `
+# TODO: fallback
+
+echo -n $FROM;echo -n $BASE;echo t$SECONDS\|$SECONDS

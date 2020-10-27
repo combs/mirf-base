@@ -76,8 +76,9 @@ if (!empty($_GET["m"])) {
 $speed=isset($_GET['speed']) ? $_GET['speed'] : 3;
 $mode=isset($_GET['mode']) ? $_GET['mode'] : "C";
 
+$random = ( isset($_GET['random']) ? $_GET['random'] : false ) || (isset($argv[0]) ? strpos($argv[0], "random") : false);
 
-if (isset($_GET['random']) || strpos($argv[0], "random") !== false ) {
+if ($random !== false ) {
 	$mode=array_keys($modes)[ rand(0, count($modes) - 2 ) ] ;  // hack -- ignore idle
 	$speed=rand(1,9);
 
@@ -232,9 +233,9 @@ echo("</select><br/><br/>");
 
 	for ($a=0;$a<8;$a++) {
 		echo("<input type='color' name='color" . $a . "' value='" );
-		echo($_GET['color' . $a] ? $_GET['color' . $a] : '#ffffff');
+		echo(isset($_GET['color' . $a]) ? $_GET['color' . $a] : '#ffffff');
 		echo("' data-touched='" );
-		echo( ( $_GET['color' . $a] && $_GET['color' . $a] != "#ffffff" )  ? "yes" : "no");
+		echo(( isset($_GET['color' . $a]) && $_GET['color' . $a] != "#ffffff" ) ? "yes" : "no");
 		echo("' class='color'>");
 	}
 
@@ -251,8 +252,11 @@ foreach(glob($data_dir . "/*.txt") as $thisone) {
 }
 
 
+?> 
 
- echo(" <br/><br/>command: <pre style='border: 2px solid grey'>" . $command . "</pre><br/><br/></div></div></div>
+<br/><br/>command: <pre style='border: 2px solid grey'>
+ <?php echo $command; ?> 
+ </pre><br/><br/></div></div></div>
 	</div>
 
     <script src='https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js'></script>
@@ -265,10 +269,3 @@ foreach(glob($data_dir . "/*.txt") as $thisone) {
 
   </body>
 </html>
-
-
-");
-
-
-
-?>
